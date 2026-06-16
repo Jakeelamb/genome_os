@@ -3,9 +3,9 @@ use crate::floating_text::FloatingText;
 #[cfg(unix)]
 use nix::unistd::Uid;
 
-const ROOT_WARNING: &str = "WARNING: You are running this utility as root!\n
-This means you have full system access and commands can potentially damage your system if used incorrectly.\n
-Please proceed with caution and make sure you understand what each script does before executing it.";
+const ROOT_WARNING: &str = "WARNING: Open Genome is running as root!\n
+Most setup and analysis helpers are designed to run as your normal user and prompt for privileges only when needed.\n
+Running as root can write manifests, conda environments, outputs, and downloaded data with ownership that later workflows cannot use.";
 
 #[cfg(unix)]
 pub fn check_root_status(bypass_root: bool) -> Option<FloatingText<'static>> {
@@ -15,7 +15,7 @@ pub fn check_root_status(bypass_root: bool) -> Option<FloatingText<'static>> {
 
     Uid::effective().is_root().then_some(FloatingText::new(
         ROOT_WARNING.into(),
-        "Root User Warning",
+        "Open Genome Root Warning",
         true,
     ))
 }

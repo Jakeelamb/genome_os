@@ -27,21 +27,18 @@ const MIN_HEIGHT: u16 = 25;
 const FLOAT_SIZE: u16 = 95;
 const CONFIRM_PROMPT_FLOAT_SIZE: u16 = 40;
 const LEFT_EXTRA_WIDTH: u16 = 4;
-const TITLE: &str = " LINUTIL ";
+const TITLE: &str = " OPEN GENOME ";
 const LIST_HIGHLIGHT_SYMBOL: &str = "> ";
-const ACTIONS_GUIDE: &str = "List of important tasks performed by commands' names:
+const ACTIONS_GUIDE: &str = "Open Genome tags:
 
-D  - disk modifications (ex. partitioning) (privileged)
-FI - flatpak installation
-FM - file modification
-I  - installation (privileged)
-K  - kernel modifications (privileged)
-MP - package manager actions
-SI - full system installation
-SS - systemd actions (privileged)
-RP - package removal
+CFG  changes local settings
+ENV  creates or updates a tool environment
+CHK  checks installed tools
+REF  prepares reference-genome files
+DATA reads or prepares sequencing data
+PIPE runs or previews a workflow
 
-P* - privileged *
+Actions still ask before writing files, installing tools, or launching long work.
 ";
 
 pub struct AppState {
@@ -136,7 +133,7 @@ impl AppState {
             selected_commands: Vec::new(),
             drawable: false,
             #[cfg(feature = "tips")]
-            tip: crate::tips::get_random_tip(),
+            tip: crate::tips::get_tip(),
             size_bypass: args.size_bypass,
             skip_confirmation: args.skip_confirmation,
             mouse_enabled: args.mouse,
@@ -219,12 +216,12 @@ impl AppState {
 
     fn get_list_item_shortcut(&self) -> Box<[Shortcut]> {
         if self.selected_item_is_dir() {
-            shortcuts!(("Go to selected dir", ["l", "Right", "Enter"]))
+            shortcuts!(("Open group", ["l", "Right", "Enter"]))
         } else {
             shortcuts!(
-                ("Run selected command", ["l", "Right", "Enter"]),
-                ("Enable preview", ["p"]),
-                ("Command Description", ["d"])
+                ("Run action", ["l", "Right", "Enter"]),
+                ("Preview action", ["p"]),
+                ("Action details", ["d"])
             )
         }
     }
@@ -238,7 +235,7 @@ impl AppState {
 
             Focus::List => {
                 let mut hints = Vec::new();
-                hints.push(Shortcut::new("Exit linutil", ["q", "CTRL-c"]));
+                hints.push(Shortcut::new("Exit", ["q", "CTRL-c"]));
 
                 if self.at_root() {
                     hints.push(Shortcut::new("Focus tab list", ["h", "Left"]));
@@ -266,24 +263,24 @@ impl AppState {
                 hints.extend(shortcuts!(
                     ("Next tab", ["Tab"]),
                     ("Previous tab", ["Shift-Tab"]),
-                    ("Important actions guide", ["g"])
+                    ("Tag guide", ["g"])
                 ));
 
-                ("Command list", hints.into_boxed_slice())
+                ("Actions", hints.into_boxed_slice())
             }
 
             Focus::TabList => (
-                "Tab list",
+                "Sections",
                 shortcuts!(
-                    ("Exit linutil", ["q", "CTRL-c"]),
-                    ("Focus action list", ["l", "Right", "Enter"]),
+                    ("Exit", ["q", "CTRL-c"]),
+                    ("Focus actions", ["l", "Right", "Enter"]),
                     ("Select item above", ["k", "Up"]),
                     ("Select item below", ["j", "Down"]),
                     ("Next theme", ["t"]),
                     ("Previous theme", ["T"]),
                     ("Next tab", ["Tab"]),
                     ("Previous tab", ["Shift-Tab"]),
-                    ("Important actions guide", ["g"]),
+                    ("Tag guide", ["g"]),
                     ("Multi-selection mode", ["v"]),
                 ),
             ),
@@ -382,7 +379,7 @@ impl AppState {
             logo.draw(frame, left_chunks[0], &self.theme);
         } else {
             let label = Paragraph::new(Line::styled(
-                format!("Linutil V{}", env!("CARGO_PKG_VERSION")),
+                format!("Open Genome v{}", env!("CARGO_PKG_VERSION")),
                 Style::default().fg(self.theme.tab_color()).bold(),
             ))
             .alignment(Alignment::Center);
@@ -450,7 +447,7 @@ impl AppState {
         #[cfg(not(feature = "tips"))]
         let bottom_title = "";
 
-        let task_list_title = Line::from(" FLAGS ").right_aligned();
+        let task_list_title = Line::from(" TAGS ").right_aligned();
         let list_focus = matches!(self.focus, Focus::List);
         let list_dim_style = if list_focus {
             Style::default()
@@ -889,8 +886,7 @@ impl AppState {
     fn enable_description(&mut self) {
         if let Some(command_description) = self.get_selected_description() {
             if !command_description.is_empty() {
-                let description =
-                    FloatingText::new(command_description, "Command Description", true);
+                let description = FloatingText::new(command_description, "Action Details", true);
                 self.spawn_float(description, FLOAT_SIZE, FLOAT_SIZE);
             }
         }
@@ -898,7 +894,7 @@ impl AppState {
 
     fn enable_task_list_guide(&mut self) {
         self.spawn_float(
-            FloatingText::new(ACTIONS_GUIDE.to_string(), "Important Actions Guide", true),
+            FloatingText::new(ACTIONS_GUIDE.to_string(), "Tag Guide", true),
             FLOAT_SIZE,
             FLOAT_SIZE,
         );

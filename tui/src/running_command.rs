@@ -350,7 +350,7 @@ impl RunningCommand {
         let mut log_path = std::env::temp_dir();
         let date_format = format_description!("[year]-[month]-[day]-[hour]-[minute]-[second]");
         log_path.push(format!(
-            "linutil_log_{}.log",
+            "open_genome_log_{}.log",
             OffsetDateTime::now_local()
                 .unwrap_or(OffsetDateTime::now_utc())
                 .format(&date_format)

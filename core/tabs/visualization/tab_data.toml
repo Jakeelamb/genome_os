@@ -1,0 +1,35 @@
+name = "Visualization"
+
+[[data]]
+name = "Local result summary"
+multi_select = false
+
+[[data.entries]]
+name = "Summarize Sarek outputs"
+description = "Lists local MultiQC reports, BAM/CRAM files, VCFs, and bcftools stats when available."
+script = "scripts/results_summary.sh"
+task_list = "DATA"
+
+[[data]]
+name = "Genome browser"
+multi_select = false
+
+[[data.entries]]
+name = "Launch IGV"
+description = "Launches IGV from the local opengenome environment for manual BAM/VCF inspection."
+script = "scripts/launch_igv.sh"
+task_list = "DATA"
+
+[[data]]
+name = "Export"
+multi_select = false
+
+[[data.entries]]
+name = "Preview VCF / table"
+command = "echo \"Use Visualization -> Summarize Sarek outputs for VCF paths and bcftools stats.\""
+task_list = "DATA"
+
+[[data.entries]]
+name = "Export for downstream"
+command = "echo \"Open Genome keeps outputs local under the configured Sarek output directory.\""
+task_list = "DATA"

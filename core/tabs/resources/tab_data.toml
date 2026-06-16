@@ -1,0 +1,25 @@
+name = "Resources"
+
+[[data]]
+name = "SNPedia"
+multi_select = false
+
+[[data.entries]]
+name = "Open SNPedia in browser"
+description = "https://www.snpedia.com - rsID lookups and annotations."
+command = "command -v xdg-open >/dev/null 2>&1 && xdg-open \"https://www.snpedia.com\" || echo \"Open https://www.snpedia.com in your browser (xdg-open not found).\""
+task_list = "DATA"
+
+[[data]]
+name = "Reference links"
+multi_select = false
+
+[[data.entries]]
+name = "NCBI / ENA / SRA links"
+command = "echo \"NCBI: https://www.ncbi.nlm.nih.gov/ | ENA: https://www.ebi.ac.uk/ena/browser/home | SRA: https://www.ncbi.nlm.nih.gov/sra\""
+task_list = "DATA"
+
+[[data.entries]]
+name = "gnomAD / ClinVar / dbSNP links"
+command = "echo \"gnomAD: https://gnomad.broadinstitute.org/ | ClinVar: https://www.ncbi.nlm.nih.gov/clinvar/ | dbSNP: https://www.ncbi.nlm.nih.gov/snp/\""
+task_list = "DATA"

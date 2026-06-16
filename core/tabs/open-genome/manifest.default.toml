@@ -1,0 +1,60 @@
+# Shipped default - copied to ~/.config/open-genome/manifest.toml on first init.
+# Edit the user copy to lock paths and toggle modules.
+
+[paths]
+reference = ""
+dataset = ""
+workdir = ""
+threads = ""
+
+[conda]
+# Prefer conda by default; set conda_exe to mamba manually if desired.
+prefer_mamba = false
+# Optional user-local Miniforge install root managed by Open Genome.
+install_root = ""
+# Optional: absolute path to conda executable.
+# conda_exe = "/opt/miniforge3/bin/conda"
+
+[privacy]
+# Open Genome may download public tools, pipelines, and references, but user data stays local.
+local_only = true
+
+[sample]
+input_dir = ""
+sample_id = ""
+patient_id = ""
+sex = "NA"
+status = "0"
+samplesheet = ""
+
+[reference]
+profile = "gatk_grch38"
+bundle_dir = ""
+fasta = ""
+fai = ""
+dict = ""
+bwa_index_ready = false
+dbsnp = ""
+known_indels = ""
+mills_indels = ""
+thousand_genomes_snps = ""
+
+[workflow]
+engine = "sarek"
+sarek_version = "3.8.1"
+runtime = "conda"
+outdir = ""
+params_file = ""
+command_file = ""
+last_run_dir = ""
+
+[results]
+summary_file = ""
+multiqc_dir = ""
+variant_stats_file = ""
+
+# Module ids match directories under open-genome/modules/<id>/
+
+[[modules]]
+id = "opengenome"
+enabled = true

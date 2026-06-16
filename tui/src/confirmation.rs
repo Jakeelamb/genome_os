@@ -62,13 +62,13 @@ impl FloatContent for ConfirmPrompt {
         let block = Block::bordered()
             .border_set(border::PLAIN)
             .border_style(Style::default().fg(theme.focused_color()))
-            .title(" CONFIRM SELECTIONS ")
+            .title(" RUN ACTION ")
             .title_bottom(Line::from(vec![
                 Span::raw(" ["),
                 Span::styled("y", Style::default().fg(theme.success_color())),
-                Span::raw("] to continue ["),
+                Span::raw("] run ["),
                 Span::styled("n", Style::default().fg(theme.fail_color())),
-                Span::raw("] to abort "),
+                Span::raw("] cancel "),
             ]))
             .title_alignment(Alignment::Center)
             .title_style(Style::default().fg(theme.tab_color()).bold())
@@ -135,13 +135,13 @@ impl FloatContent for ConfirmPrompt {
 
     fn get_shortcut_list(&self) -> (&str, Box<[Shortcut]>) {
         (
-            "Confirmation prompt",
+            "Run action",
             shortcuts!(
-                ("Continue", ["Y", "y"]),
-                ("Abort", ["N", "n", "q", "Esc"]),
+                ("Run", ["Y", "y"]),
+                ("Cancel", ["N", "n", "q", "Esc"]),
                 ("Scroll up", ["k", "Up"]),
                 ("Scroll down", ["j", "Down"]),
-                ("Close linutil", ["CTRL-c"]),
+                ("Close", ["CTRL-c"]),
             ),
         )
     }

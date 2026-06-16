@@ -1,0 +1,32 @@
+name: opengenome
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - csvtk
+  - python>=3.11,<3.13
+  - openjdk>=17,<22
+  - multiqc
+  - ncbi-datasets-cli
+  - sra-tools
+  - bwa
+  - gatk4
+  - jq
+  - ca-certificates
+  - wget
+  - curl
+  - fastp
+  - nf-core
+  - mosdepth
+  - samtools
+  - seqkit
+  - fastqc
+  - yq
+  - nextflow
+  - pigz
+  - picard
+  - htslib
+  - bedtools
+  - minimap2
+  - bcftools
+  - igv

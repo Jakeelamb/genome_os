@@ -1,152 +1,67 @@
-# Chris Titus Tech's Linux Utility
+# Open Genome
 
-[![Version](https://img.shields.io/github/v/release/ChrisTitusTech/linutil?color=%230567ff&label=Latest%20Release&style=for-the-badge)](https://github.com/ChrisTitusTech/linutil/releases/latest)
-![GitHub Downloads (specific asset, all releases)](https://img.shields.io/github/downloads/ChrisTitusTech/linutil/linutil?label=Total%20Downloads&style=for-the-badge)
-[![Crates.io Version](https://img.shields.io/crates/v/linutil_tui?style=for-the-badge&color=%23af3a03)](https://crates.io/crates/linutil_tui)
-[![](https://dcbadge.limes.pink/api/server/https://discord.gg/RUbZUZyByQ?theme=default-inverted&style=for-the-badge)](https://discord.gg/RUbZUZyByQ)
-![Preview](/.github/preview.gif)
-<p align="center"><i>The above preview was generated with the help of <a href="https://github.com/charmbracelet/vhs">vhs</a>, give them a :star:!</i></p>
+Terminal utility for genomics workflows, built on the [Linutil](https://github.com/ChrisTitusTech/linutil)-style Rust TUI: left pane categories, right pane actions, same keyboard model.
 
-**Linutil** is a distro-agnostic toolbox designed to simplify everyday Linux tasks. It helps you set up applications and optimize your system for specific use cases. The utility is actively developed in Rust 🦀, providing performance and reliability.
-
-> [!NOTE]
-> Since the project is still in active development, you may encounter some issues. Please consider [submitting feedback](https://github.com/ChrisTitusTech/linutil/issues) if you do.
-
-## 💡 Usage
-To get started, pick which branch you would like to use, then run the command in your terminal:
-### Stable Branch (Recommended)
-```bash
-curl -fsSL https://christitus.com/linux | sh
-```
-### Dev branch
-```bash
-curl -fsSL https://christitus.com/linuxdev | sh
-```
-
-### CLI arguments
-
-View available options by running:
+## Run from source
 
 ```bash
-linutil --help
+cargo run -p linutil_tui
 ```
 
-For installer options:
+By default the TUI links the [dna](https://github.com/Jakeelamb/dna) crate via a path dependency: from this repo’s root, that resolves to **`../dinosauria/dna`** (for example `~/Projects/genome_os` and `~/Projects/dinosauria/dna`). If `genome_os` lives next to `dna` under the same parent (e.g. `~/Projects/dinosauria/genome_os` and `~/Projects/dinosauria/dna`), change the path in `tui/Cargo.toml` to `../dna`. Set `OPEN_GENOME_USE_CTT_LOGO=1` to use the embedded PNG instead.
+
+If you only have this repository (no sibling checkout), disable the default helix dependency:
 
 ```bash
-curl -fsSL https://christitus.com/linux | sh -s -- --help
+cargo run -p linutil_tui --no-default-features --features tips
 ```
 
-## ⬇️ Installation
+The Nix package builds the same way (PNG logo only): `nix build .#default`.
 
-Linutil is also available as a package in various repositories:
-
-[![Packaging status](https://repology.org/badge/vertical-allrepos/linutil.svg)](https://repology.org/project/linutil/versions)
-
-<details>
-  <summary>Arch Linux</summary>
-
-Linutil can be installed on [Arch Linux](https://archlinux.org) with three different [AUR](https://aur.archlinux.org) packages:
-
-- `linutil` - Stable release compiled from source
-- `linutil-bin` - Stable release pre-compiled
-- `linutil-git` - Compiled from the last commit (not recommended)
-
-by running:
+Release binary (workspace default):
 
 ```bash
-git clone https://aur.archlinux.org/<package>.git
-cd <package>
-makepkg -si
+cargo build --release -p linutil_tui
+# target/release/linutil
 ```
 
-Replace `<package>` with your preferred package.
-
-If you use [yay](https://github.com/Jguer/yay), [paru](https://github.com/Morganamilo/paru) or any other [AUR Helper](https://wiki.archlinux.org/title/AUR_helpers), it's even simpler:
+### CLI flags
 
 ```bash
-paru -S linutil
+cargo run -p linutil_tui -- --help
 ```
 
-Replace `paru` with your preferred helper and `linutil` with your preferred package.
+Linutil-compatible options still apply: `--config`, `--theme`, `--skip-confirmation`, `--override-validation`, `--size-bypass`, `--mouse`, `--bypass-root`.
 
-</details>
-<details>
-  <summary>OpenSUSE</summary>
-  
-Linutil can be installed on OpenSUSE with:
-```bash
-sudo zypper install linutil
-```
+## Configuration (manifest + conda)
 
-</details>
-<details>
-  <summary>Cargo</summary>
+- **User manifest:** `$XDG_CONFIG_HOME/open-genome/manifest.toml` (created on first Setup action from the bundled default).
+- **Privacy:** local-only user data by default. Public tools, references, and pipelines may be downloaded; reads/BAMs/VCFs/logs are not uploaded.
+- **Paths:** `paths.reference`, `paths.dataset`, `paths.workdir`, `paths.threads`.
+- **Conda:** Open Genome can install private Miniforge/Conda under `$XDG_DATA_HOME/open-genome/miniforge`, or use `conda.conda_exe`.
+- **Samples:** Setup can scan a folder of paired FASTQ/FASTQ.gz or existing BAM/CRAM/VCF files and write a local nf-core/sarek samplesheet.
+- **Reference/workflow:** Assembly actions fetch the public GATK GRCh38 bundle, index it locally, prepare an nf-core/sarek 3.8.1 germline command, and run/resume it with the Conda profile.
+- **Environment:** the main `opengenome` conda spec lives at [core/tabs/open-genome/modules/opengenome/environment.yml](core/tabs/open-genome/modules/opengenome/environment.yml). Legacy per-tool module specs remain under [core/tabs/open-genome/modules/](core/tabs/open-genome/modules/) for fallback/debugging.
 
-Linutil can be installed via [Cargo](https://doc.rust-lang.org/cargo) with:
+Legacy `paths.env` is imported **once** on bootstrap only if the manifest path fields are still empty. Example templates: [examples/open-genome.manifest.toml](examples/open-genome.manifest.toml), [examples/open-genome.paths.env](examples/open-genome.paths.env).
 
-```bash
-cargo install linutil_tui
-```
+**Requires Python 3.11+** on the machine that runs Setup scripts (`tomllib`). Conda installs need **conda** on `PATH` (or set `conda.conda_exe`).
 
-Note that crates installed using `cargo install` require manual updating with `cargo install --force` (update functionality is [included in LinUtil](https://christitustech.github.io/linutil/userguide/#applications-setup))
+## Linutil-style app config (`--config`)
 
-</details>
+Optional TOML for the TUI (auto-execute, confirmations, size bypass) — same schema as upstream Linutil. Example:
 
-## Configuration
-
-Linutil supports configuration through a TOML config file. Path to the file can be specified with `--config` (or `-c`).
-
-Available options:
-- `auto_execute` - A list of commands to execute automatically (can be combined with `--skip-confirmation`)
-- `skip_confirmation` - Boolean ( Equal to `--skip-confirmation`)
-- `size_bypass` - Boolean ( Equal to `--size-bypass` )
-
-Example config:
 ```toml
-# example_config.toml
-
-auto_execute = [
-    "Fastfetch",
-    "Alacritty",
-    "Kitty"
-]
-
-skip_confirmation = true
-size_bypass = true
+skip_confirmation = false
+size_bypass = false
 ```
 
-```bash
-linutil --config /path/to/example_config.toml
-```
+`auto_execute` matches **command titles** exactly as shown in the right-hand list.
 
-## 💖 Support
+## Upstream
 
-If you find Linutil helpful, please consider giving it a ⭐️ to show your support!
+Forked from Chris Titus Tech’s Linutil; see upstream README and license in `LICENSE`. Contributor graphics and distro install snippets in older revisions referred to Linutil releases.
 
-## 🎓 Documentation
+## Contributing
 
-For comprehensive information on how to use Linutil, visit the [Linutil Official Documentation](https://linutil.christitus.com/).
-
-## 🛠 Contributing
-
-We welcome contributions from the community! Before you start, please review our [Contributing Guidelines](.github/CONTRIBUTING.md) to understand how to make the most effective and efficient contributions.
-
-Docs are now [here](https://github.com/Chris-Titus-Docs/linutil-docs)
-
-## 🏅 Thanks to All Contributors
-
-Thank you to everyone who has contributed to the development of Linutil. Your efforts are greatly appreciated, and you're helping make this tool better for everyone!
-
-[![Contributors](https://contrib.rocks/image?repo=ChrisTitusTech/linutil)](https://github.com/ChrisTitusTech/linutil/graphs/contributors)
-
-## 📜 Contributor Milestones
-
-- 2024/07 - Original Linutil Rust TUI was developed by [@JustLinuxUser](https://github.com/JustLinuxUser).
-- 2024/09 - TabList (Left Column) and various Rust Core/TUI Improvements developed by [@lj3954](https://github.com/lj3954)
-- 2024/09 - Cargo Publish, AUR, Rust, and Bash additions done by [@koibtw](https://github.com/koibtw)
-- 2024/09 - Rust TUI Min/Max, MultiSelection, and Bash additions done by [@jeevithakannan2](https://github.com/jeevithakannan2)
-- 2024/09 - Various bash updates and standardization done by [@nnyyxxxx](https://github.com/nnyyxxxx)
-- 2024/09 - Multiple bash script additions done by [@guruswarupa](https://github.com/guruswarupa)
-- 2026/01 - TUI Refresh with Logo by [@Abs313a](https://github.com/Abs313a)
-- 2026/03 - Linutil docs website creation by [@seanh1995](https://github.com/seanh1995)
+See [.github/CONTRIBUTING.md](.github/CONTRIBUTING.md).

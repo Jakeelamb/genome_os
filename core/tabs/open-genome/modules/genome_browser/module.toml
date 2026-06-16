@@ -1,0 +1,3 @@
+id = "genome_browser"
+display_name = "Genome browser (IGV)"
+description = "IGV desktop for visualization (conda-forge)."

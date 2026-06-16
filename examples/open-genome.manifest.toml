@@ -1,0 +1,77 @@
+# Example user manifest (copy to ~/.config/open-genome/manifest.toml or let the TUI bootstrap).
+
+[paths]
+reference = "/data/refs/GRCh38.primary_assembly.fa"
+dataset = "/data/runs/sample42"
+workdir = "/data/work/open-genome"
+threads = "32"
+
+[conda]
+prefer_mamba = true
+install_root = "/home/user/.local/share/open-genome/miniforge"
+conda_exe = "/home/user/.local/share/open-genome/miniforge/bin/mamba"
+
+[privacy]
+local_only = true
+
+[sample]
+input_dir = "/data/runs/sample42"
+sample_id = "sample42"
+patient_id = "sample42"
+sex = "NA"
+status = "0"
+samplesheet = "/data/work/open-genome/samples/sarek_samplesheet.csv"
+
+[reference]
+profile = "gatk_grch38"
+bundle_dir = "/data/refs/gatk_grch38"
+fasta = "/data/refs/gatk_grch38/Homo_sapiens_assembly38.fasta"
+fai = "/data/refs/gatk_grch38/Homo_sapiens_assembly38.fasta.fai"
+dict = "/data/refs/gatk_grch38/Homo_sapiens_assembly38.dict"
+bwa_index_ready = true
+dbsnp = "/data/refs/gatk_grch38/dbsnp_146.hg38.vcf.gz"
+known_indels = "/data/refs/gatk_grch38/Homo_sapiens_assembly38.known_indels.vcf.gz"
+mills_indels = "/data/refs/gatk_grch38/Mills_and_1000G_gold_standard.indels.hg38.vcf.gz"
+thousand_genomes_snps = "/data/refs/gatk_grch38/1000G_phase1.snps.high_confidence.hg38.vcf.gz"
+
+[workflow]
+engine = "sarek"
+sarek_version = "3.8.1"
+runtime = "conda"
+outdir = "/data/work/open-genome/sarek-results"
+params_file = "/data/work/open-genome/sarek-open-genome.params.txt"
+command_file = "/data/work/open-genome/bin/run_sarek_open_genome.sh"
+last_run_dir = "/data/work/open-genome/nextflow-work"
+
+[results]
+summary_file = "/data/work/open-genome/results/open-genome-summary.txt"
+multiqc_dir = "/data/work/open-genome/sarek-results/multiqc"
+variant_stats_file = "/data/work/open-genome/results/sample42.vcf.gz.bcftools-stats.txt"
+
+[[modules]]
+id = "sratoolkit"
+enabled = true
+
+[[modules]]
+id = "ncbi_datasets"
+enabled = true
+
+[[modules]]
+id = "genomic_tools"
+enabled = true
+
+[[modules]]
+id = "genome_browser"
+enabled = true
+
+[[modules]]
+id = "nextflow"
+enabled = true
+
+[[modules]]
+id = "gatk"
+enabled = true
+
+[[modules]]
+id = "qc"
+enabled = true

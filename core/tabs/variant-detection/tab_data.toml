@@ -1,0 +1,65 @@
+name = "Variant detection"
+
+[[data]]
+name = "Reference and tools"
+multi_select = false
+
+[[data.entries]]
+name = "BWA on PATH"
+description = "Quick check for a globally installed bwa; Open Genome normally uses the opengenome conda environment."
+script = "scripts/check_bwa.sh"
+task_list = "CHK REF"
+multi_select = false
+
+[[data.entries]]
+name = "samtools on PATH"
+description = "Quick check for a globally installed samtools; Open Genome normally uses the opengenome conda environment."
+script = "scripts/check_samtools.sh"
+task_list = "CHK REF"
+multi_select = false
+
+[[data.entries]]
+name = "Picard / GATK on PATH"
+description = "Quick check for globally installed Picard or GATK."
+script = "scripts/check_picard.sh"
+task_list = "CHK REF"
+multi_select = false
+
+[[data]]
+name = "Configured reference"
+multi_select = false
+
+[[data.entries]]
+name = "Show expected index layout + configured reference"
+description = "Uses OPEN_GENOME_REFERENCE from Setup paths when set."
+script = "scripts/index_layout_hint.sh"
+task_list = "REF"
+multi_select = false
+
+[[data]]
+name = "Germline variant calling"
+multi_select = false
+
+[[data.entries]]
+name = "GATK on PATH"
+script = "scripts/check_gatk.sh"
+task_list = "CHK"
+multi_select = false
+
+[[data.entries]]
+name = "Prepare Sarek/GATK HaplotypeCaller workflow"
+description = "Use the Assembly tab action to generate the nf-core/sarek germline command with HaplotypeCaller."
+command = "echo \"Use Assembly -> Prepare Sarek germline run. It generates a local nf-core/sarek HaplotypeCaller command.\""
+task_list = "PIPE DATA"
+
+[[data.entries]]
+name = "Run / resume Sarek/GATK HaplotypeCaller"
+description = "Use the Assembly tab action to execute the prepared Sarek command."
+command = "echo \"Use Assembly -> Run / resume Sarek germline workflow.\""
+task_list = "PIPE DATA"
+
+[[data.entries]]
+name = "Expert: GATK HaplotypeCaller from existing BAM/CRAM"
+description = "Generates a local command for users who already have a coordinate-sorted BAM/CRAM."
+script = "scripts/prepare_gatk_existing_bam.sh"
+task_list = "PIPE DATA"

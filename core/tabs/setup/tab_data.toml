@@ -1,0 +1,142 @@
+name = "Setup"
+
+[[data]]
+name = "Guided setup"
+multi_select = false
+
+[[data.entries]]
+name = "Set up this machine"
+description = "Install local tools, create the Open Genome environment, and scan a sequencing folder."
+script = "scripts/first_time_setup.sh"
+task_list = "ENV CFG DATA"
+multi_select = false
+
+[[data.entries]]
+name = "Import sequencing files"
+description = "Find FASTQ, BAM, CRAM, or VCF files and save a local Sarek samplesheet."
+script = "scripts/scan_sequencing_folder.sh"
+task_list = "CFG DATA"
+multi_select = false
+
+[[data.entries]]
+name = "Review project settings"
+description = "Show saved paths, sample scan, reference, workflow, and results settings."
+script = "scripts/show_paths.sh"
+task_list = "CFG"
+multi_select = false
+
+[[data]]
+name = "Advanced setup"
+multi_select = false
+
+[[data.entries]]
+name = "Install private Miniforge/Conda"
+description = "Installs a user-local Miniforge under Open Genome data and records conda.conda_exe."
+script = "scripts/install_private_miniforge.sh"
+task_list = "ENV CFG"
+multi_select = false
+
+[[data.entries]]
+name = "Install / update: Open Genome env"
+description = "Installs one conda environment with workflow, GATK/Picard, QC, SRA, NCBI, genomic tools, and IGV."
+script = "scripts/conda_install_all_recommended.sh"
+task_list = "ENV"
+multi_select = false
+
+[[data.entries]]
+name = "Probe conda"
+description = "Resolve installer from manifest and print version."
+script = "scripts/conda_probe.sh"
+task_list = "CHK"
+multi_select = false
+
+[[data.entries]]
+name = "Set work directory"
+description = "Interactive: saves paths.workdir."
+script = "scripts/set_workdir.sh"
+task_list = "CFG"
+multi_select = false
+
+[[data.entries]]
+name = "Set reference genome path"
+description = "Interactive: saves paths.reference in manifest.toml."
+script = "scripts/set_reference_path.sh"
+task_list = "CFG REF"
+multi_select = false
+
+[[data.entries]]
+name = "Set sequencing dataset path"
+description = "Interactive: saves paths.dataset."
+script = "scripts/set_dataset_path.sh"
+task_list = "CFG DATA"
+multi_select = false
+
+[[data.entries]]
+name = "Set CPU thread cap"
+description = "Shows logical CPUs; saves paths.threads in manifest.toml."
+script = "scripts/show_cpu_count.sh"
+task_list = "CFG"
+multi_select = false
+
+[[data.entries]]
+name = "List bundled conda modules"
+description = "Shows modules/<id> shipped with this build (metadata + pins)."
+script = "scripts/list_open_genome_modules.sh"
+task_list = "CHK"
+multi_select = false
+
+[[data.entries]]
+name = "Install one env: Open Genome toolbox"
+description = "One conda environment for workflow, GATK/Picard, QC, SRA, NCBI, genomic tools, and IGV."
+script = "scripts/conda_install_opengenome.sh"
+task_list = "ENV"
+multi_select = false
+
+[[data.entries]]
+name = "Install one env: genomic tools"
+description = "samtools, bcftools, bwa, minimap2 - pinned."
+script = "scripts/conda_install_genomic_tools.sh"
+task_list = "ENV"
+multi_select = false
+
+[[data.entries]]
+name = "Install one env: GATK + Picard"
+description = "GATK4, Picard, samtools, bcftools, bwa, and htslib."
+script = "scripts/conda_install_gatk.sh"
+task_list = "ENV PIPE"
+multi_select = false
+
+[[data.entries]]
+name = "Install one env: QC tools"
+description = "FastQC, MultiQC, mosdepth, seqkit, bcftools, and samtools."
+script = "scripts/conda_install_qc.sh"
+task_list = "ENV DATA"
+multi_select = false
+
+[[data.entries]]
+name = "Install one env: Nextflow"
+description = "Nextflow + OpenJDK."
+script = "scripts/conda_install_nextflow.sh"
+task_list = "ENV PIPE"
+multi_select = false
+
+[[data.entries]]
+name = "Install one env: SRA toolkit"
+description = "Pinned sra-tools via bioconda."
+script = "scripts/conda_install_sratoolkit.sh"
+task_list = "ENV DATA"
+multi_select = false
+
+[[data.entries]]
+name = "Install one env: NCBI datasets"
+description = "ncbi-datasets-cli."
+script = "scripts/conda_install_ncbi_datasets.sh"
+task_list = "ENV DATA"
+multi_select = false
+
+[[data.entries]]
+name = "Install one env: genome browser"
+description = "IGV + JDK."
+script = "scripts/conda_install_genome_browser.sh"
+task_list = "ENV"
+multi_select = false

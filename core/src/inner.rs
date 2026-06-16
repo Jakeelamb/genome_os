@@ -41,7 +41,7 @@ impl IntoIterator for TabList {
 }
 
 pub fn get_tabs(validate: bool) -> TabList {
-    let temp_dir = TempDir::with_prefix("linutil_scripts").unwrap();
+    let temp_dir = TempDir::with_prefix("open_genome_scripts").unwrap();
     let tab_files = TabDirectories::get_tabs(&temp_dir);
 
     let tabs: Vec<_> = tab_files

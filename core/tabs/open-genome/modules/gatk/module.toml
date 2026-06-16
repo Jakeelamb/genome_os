@@ -1,0 +1,3 @@
+id = "gatk"
+display_name = "GATK and Picard"
+description = "GATK4 and Picard for germline variant calling and reference dictionary/index preparation."

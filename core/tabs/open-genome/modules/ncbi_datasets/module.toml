@@ -1,0 +1,3 @@
+id = "ncbi_datasets"
+display_name = "NCBI datasets CLI"
+description = "datasets command-line tool for NCBI sequence and metadata."
