@@ -25,7 +25,7 @@ This directory is embedded next to the tab trees and extracted at runtime with t
 4. Resources -> Set up local annotation cache, then Assembly -> Fetch/index configured GRCh38 reference.
 5. Assembly -> Prepare Open Genome native run, then Run / resume Open Genome native workflow.
 6. Visualization -> Summarize local workflow outputs, optionally launch IGV from the separate genome browser env.
-7. Reports -> Review the free V1 report sources and interpretation boundaries.
+7. Reports -> Review the report sources and interpretation boundaries.
 
 Open Genome may download public tools, nf-core/sarek, and reference resources, but user reads, BAM/CRAM, VCF, logs, and metadata stay local.
 

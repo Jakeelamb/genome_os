@@ -8,7 +8,7 @@ Terminal utility for genomics workflows, built on the [Linutil](https://github.c
 cargo run -p linutil_tui
 ```
 
-The TUI uses the bundled PNG logo and does not require a sibling checkout or private path dependency. The Nix package builds the same way: `nix build .#default`.
+The TUI uses a built-in animated DNA logo by default and does not require a sibling checkout or private path dependency. Set `OPEN_GENOME_USE_PNG_LOGO=1` to use the bundled PNG fallback. The Nix package builds the same way: `nix build .#default`.
 
 Release binary (workspace default):
 

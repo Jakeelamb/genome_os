@@ -2,7 +2,7 @@
 set -euo pipefail
 
 cat <<'EOF'
-Open Genome - Good Free V1 report sources
+Open Genome - Report sources
 
 Goal:
   Provide a 23andMe-style digestible report, but keep source data,
