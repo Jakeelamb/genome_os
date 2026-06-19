@@ -31,6 +31,11 @@ if test -z "$report" || ! test -f "$report"; then
 				\( -path '*/nextflow-work-*' -o -path '*/.nextflow' \) -prune -o \
 				-type f -name 'open_genome_report.html' -print 2>/dev/null | sort | head -n 1 || true)
 		fi
+		if test -z "$report"; then
+			report=$(find "$outdir" \
+				\( -path '*/nextflow-work-*' -o -path '*/.nextflow' \) -prune -o \
+				-type f -name 'denovo_assembly_report.html' -print 2>/dev/null | sort | head -n 1 || true)
+		fi
 	fi
 fi
 

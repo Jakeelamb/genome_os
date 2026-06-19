@@ -40,6 +40,27 @@ class SampleScanTests(unittest.TestCase):
             self.assertEqual("vcf", sample_scan._find_vcf_rows(root)[0]["input_type"])
             self.assertEqual("assembly", sample_scan._find_assembly_rows(root)[0]["input_type"])
 
+    def test_long_read_rows_for_denovo_assembly(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            hifi_reads = root / "HG002.hifi_reads.fastq.gz"
+            ont_reads = root / "HG002.nanopore.bam"
+            assembly = root / "HG002.assembly.fasta"
+            hifi_reads.write_text("", encoding="utf-8")
+            ont_reads.write_text("", encoding="utf-8")
+            assembly.write_text(">x\nACGT\n", encoding="utf-8")
+
+            fastq_rows, warnings = sample_scan._find_fastq_rows(root)
+            rows = sample_scan._find_denovo_read_rows(root, fastq_rows)
+
+            self.assertEqual([], warnings)
+            self.assertEqual([], fastq_rows)
+            self.assertEqual(["denovo_reads", "denovo_reads"], [row["input_type"] for row in rows])
+            self.assertEqual(str(hifi_reads.resolve()), rows[0]["long_reads"])
+            self.assertEqual(str(ont_reads.resolve()), rows[1]["long_reads"])
+            self.assertEqual("assembly", sample_scan._find_assembly_rows(root)[0]["input_type"])
+            self.assertEqual([], sample_scan._find_alignment_rows(root))
+
     def test_write_open_genome_columns(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp) / "samples.csv"
@@ -55,6 +76,7 @@ class SampleScanTests(unittest.TestCase):
                     "cram": "",
                     "vcf": "/tmp/sample.vcf.gz",
                     "assembly": "",
+                    "long_reads": "",
                     "sex": "NA",
                     "status": "0",
                     "_lane": "lane_1",
@@ -63,7 +85,24 @@ class SampleScanTests(unittest.TestCase):
             sample_scan._write_samplesheet(out, rows, sample_scan.OPEN_GENOME_COLUMNS)
             with out.open("r", encoding="utf-8", newline="") as fh:
                 read_rows = list(csv.DictReader(fh))
-            self.assertEqual(["sample", "row_id", "lane", "input_type", "fastq_1", "fastq_2", "bam", "cram", "vcf", "assembly", "sex", "status"], list(read_rows[0].keys()))
+            self.assertEqual(
+                [
+                    "sample",
+                    "row_id",
+                    "lane",
+                    "input_type",
+                    "fastq_1",
+                    "fastq_2",
+                    "bam",
+                    "cram",
+                    "vcf",
+                    "assembly",
+                    "long_reads",
+                    "sex",
+                    "status",
+                ],
+                list(read_rows[0].keys()),
+            )
             self.assertEqual("vcf", read_rows[0]["input_type"])
             self.assertEqual("0o600", oct(out.stat().st_mode & 0o777))
 

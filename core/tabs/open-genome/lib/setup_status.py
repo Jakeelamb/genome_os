@@ -115,9 +115,12 @@ def evaluate() -> dict:
     outdir = _value(data, "workflow", "outdir")
     params_file = _value(data, "workflow", "params_file")
     command_file = _value(data, "workflow", "command_file")
+    denovo_outdir = _value(data, "workflow", "denovo_outdir")
+    denovo_command_file = _value(data, "workflow", "denovo_command_file")
     report_html = _value(data, "results", "report_html")
     findings_tsv = _value(data, "results", "findings_tsv")
     evidence_json = _value(data, "results", "evidence_json")
+    denovo_report_html = _value(data, "results", "denovo_report_html")
     threads = _value(data, "paths", "threads")
 
     sections = [
@@ -126,6 +129,7 @@ def evaluate() -> dict:
             "items": [
                 item("Conda available", conda["state"] == "ok", conda_detail, "Start Here -> Advanced manual setup -> Use existing conda or Install private conda"),
                 item("Open Genome tools", env_exists(conda, "opengenome"), "opengenome", "Start Here -> Advanced manual setup -> Install or update local tools"),
+                item("De novo assembly tools", env_exists(conda, "opengenome-denovo"), "opengenome-denovo", "Start Here -> Advanced manual setup -> Install or update local tools"),
                 item("Output folder", _path_exists(workdir, "dir"), workdir, "Start Here -> Advanced manual setup -> Choose results folder"),
                 info("CPU usage limit", threads or "optional; defaults to available CPUs"),
             ],
@@ -165,6 +169,8 @@ def evaluate() -> dict:
                 item("Workflow output folder", _path_exists(outdir, "dir"), outdir, "Run Analysis -> Run local genome analysis"),
                 item("Params file", _path_exists(params_file, "file"), params_file, "Run Analysis -> Run local genome analysis"),
                 item("Run command", _path_exists(command_file, "file"), command_file, "Run Analysis -> Run local genome analysis"),
+                info("De novo output folder", denovo_outdir or "not prepared"),
+                info("De novo run command", denovo_command_file or "not prepared"),
             ],
         },
         {
@@ -173,6 +179,7 @@ def evaluate() -> dict:
                 item("HTML report", _path_exists(report_html, "file"), report_html, "Start Here -> Load existing results or Run Analysis -> Run local genome analysis"),
                 item("Findings table", _path_exists(findings_tsv, "file"), findings_tsv, "Start Here -> Load existing results or Run Analysis -> Run local genome analysis"),
                 item("Evidence JSON", _path_exists(evidence_json, "file"), evidence_json, "Start Here -> Load existing results or Run Analysis -> Run local genome analysis"),
+                info("De novo HTML report", denovo_report_html or "not run"),
             ],
         },
     ]
@@ -184,6 +191,7 @@ def evaluate() -> dict:
         "Samplesheet": samplesheet or "not set",
         "Reference": fasta or reference_path or "not set",
         "Workflow output": outdir or "not set",
+        "De novo output": denovo_outdir or "not set",
         "Report": report_html or "not set",
     }
     return {

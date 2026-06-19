@@ -47,6 +47,10 @@ outdir = "/data/work/open-genome/open-genome-results"
 params_file = "/data/work/open-genome/open-genome.params.txt"
 command_file = "/data/work/open-genome/bin/run_open_genome_pipeline.sh"
 last_run_dir = "/data/work/open-genome/nextflow-work-opengenome"
+denovo_outdir = "/data/work/open-genome/denovo-assembly-results"
+denovo_params_file = "/data/work/open-genome/denovo-assembly.params.txt"
+denovo_command_file = "/data/work/open-genome/bin/run_denovo_assembly_pipeline.sh"
+denovo_last_run_dir = "/data/work/open-genome/nextflow-work-denovo-assembly"
 
 [results]
 summary_file = "/data/work/open-genome/results/open-genome-summary.txt"
@@ -56,6 +60,10 @@ report_dir = "/data/work/open-genome/open-genome-results/report"
 report_html = "/data/work/open-genome/open-genome-results/report/report_index.html"
 findings_tsv = "/data/work/open-genome/open-genome-results/report/findings.tsv"
 evidence_json = "/data/work/open-genome/open-genome-results/report/evidence.json"
+denovo_report_dir = "/data/work/open-genome/denovo-assembly-results/report"
+denovo_report_html = "/data/work/open-genome/denovo-assembly-results/report/denovo_assembly_report.html"
+denovo_summary_tsv = "/data/work/open-genome/denovo-assembly-results/report/denovo_assembly_summary.tsv"
+denovo_manifest_json = "/data/work/open-genome/denovo-assembly-results/report/denovo_assembly_manifest.json"
 
 [cache]
 root = "/data/work/open-genome/cache"
@@ -77,4 +85,8 @@ enabled = true
 
 [[modules]]
 id = "genome_browser"
+enabled = true
+
+[[modules]]
+id = "denovo_assembly"
 enabled = true

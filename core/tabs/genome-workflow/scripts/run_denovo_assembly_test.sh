@@ -15,31 +15,30 @@ export XDG_CACHE_HOME="$tmp/cache"
 
 mkdir -p "$OPEN_GENOME_CONFIG_DIR" "$tmp/input" "$tmp/work"
 
-printf '>chr1\nACGTACGTACGT\n' >"$tmp/ref.fa"
-printf 'chr1\t12\t0\t12\t13\n' >"$tmp/ref.fa.fai"
-printf '@HD\tVN:1.6\n@SQ\tSN:chr1\tLN:12\tM5:31e91beccf6059ff57c696827c0c6a4b\tUR:file:%s\n' "$tmp/ref.fa" >"$tmp/ref.dict"
-printf '##fileformat=VCFv4.2\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n' | gzip -c >"$tmp/input/sample.vcf.gz"
+printf '@read1\nACGTACGTACGTACGT\n+\nIIIIIIIIIIIIIIII\n' | gzip -c >"$tmp/input/HG002.hifi_reads.fastq.gz"
 printf 'sample,row_id,lane,input_type,fastq_1,fastq_2,bam,cram,vcf,assembly,long_reads,sex,status\n' >"$tmp/input/samples.csv"
-printf 'sample,sample_vcf,lane_1,vcf,,,,,%s,,,NA,0\n' "$tmp/input/sample.vcf.gz" >>"$tmp/input/samples.csv"
+printf 'HG002,HG002_denovo,lane_1,denovo_reads,,,,,,,%s,NA,0\n' "$tmp/input/HG002.hifi_reads.fastq.gz" >>"$tmp/input/samples.csv"
 
 python3 "$MANIFEST_CLI" init "$DEFAULT_MANIFEST"
 python3 "$MANIFEST_CLI" set paths.workdir "$tmp/work"
 python3 "$MANIFEST_CLI" set paths.dataset "$tmp/input"
+python3 "$MANIFEST_CLI" set paths.threads 2
 python3 "$MANIFEST_CLI" set sample.samplesheet "$tmp/input/samples.csv"
-python3 "$MANIFEST_CLI" set sample.input_type vcf
-python3 "$MANIFEST_CLI" set reference.fasta "$tmp/ref.fa"
-python3 "$MANIFEST_CLI" set reference.fai "$tmp/ref.fa.fai"
-python3 "$MANIFEST_CLI" set reference.dict "$tmp/ref.dict"
+python3 "$MANIFEST_CLI" set sample.input_type denovo_reads
 
-output=$(printf 'n\n' | bash "$HERE/run_open_genome.sh" 2>&1)
-command_file=$(python3 "$MANIFEST_CLI" get workflow.command_file)
+output=$(printf 'n\n' | bash "$HERE/run_denovo_assembly.sh" 2>&1)
+command_file=$(python3 "$MANIFEST_CLI" get workflow.denovo_command_file)
 
 if ! grep -q "Preparing the workflow now" <<<"$output"; then
-	printf 'not ok - run action auto-prepares missing workflow command\n%s\n' "$output" >&2
+	printf 'not ok - de novo run action auto-prepares missing workflow command\n%s\n' "$output" >&2
 	exit 1
 fi
 if ! test -f "$command_file"; then
-	printf 'not ok - auto-prepare wrote command file\nexpected: %s\n' "$command_file" >&2
+	printf 'not ok - auto-prepare wrote de novo command file\nexpected: %s\n' "$command_file" >&2
+	exit 1
+fi
+if ! grep -q "denovo-assembly" "$command_file"; then
+	printf 'not ok - de novo command targets denovo-assembly pipeline\n' >&2
 	exit 1
 fi
 if ! grep -q "Aborted." <<<"$output"; then
@@ -47,4 +46,4 @@ if ! grep -q "Aborted." <<<"$output"; then
 	exit 1
 fi
 
-printf 'ok - run action auto-prepares missing Open Genome command file\n'
+printf 'ok - de novo run action auto-prepares missing command file\n'

@@ -110,6 +110,10 @@ def _write_manifest(path: Path, data: dict) -> None:
             "params_file",
             "command_file",
             "last_run_dir",
+            "denovo_outdir",
+            "denovo_params_file",
+            "denovo_command_file",
+            "denovo_last_run_dir",
         ),
     )
 
@@ -118,7 +122,19 @@ def _write_manifest(path: Path, data: dict) -> None:
         lines,
         "results",
         results,
-        ("summary_file", "multiqc_dir", "variant_stats_file", "report_dir", "report_html", "findings_tsv", "evidence_json"),
+        (
+            "summary_file",
+            "multiqc_dir",
+            "variant_stats_file",
+            "report_dir",
+            "report_html",
+            "findings_tsv",
+            "evidence_json",
+            "denovo_report_dir",
+            "denovo_report_html",
+            "denovo_summary_tsv",
+            "denovo_manifest_json",
+        ),
     )
 
     cache = data.setdefault("cache", {})
@@ -275,10 +291,37 @@ def main(argv: list[str]) -> int:
         ):
             print(f"  reference.{k}={reference.get(k, '')!r}")
         workflow = data.get("workflow", {})
-        for k in ("engine", "pipeline_version", "sarek_version", "runtime", "native_profile", "sarek_runtime", "outdir", "params_file", "command_file", "last_run_dir"):
+        for k in (
+            "engine",
+            "pipeline_version",
+            "sarek_version",
+            "runtime",
+            "native_profile",
+            "sarek_runtime",
+            "outdir",
+            "params_file",
+            "command_file",
+            "last_run_dir",
+            "denovo_outdir",
+            "denovo_params_file",
+            "denovo_command_file",
+            "denovo_last_run_dir",
+        ):
             print(f"  workflow.{k}={workflow.get(k, '')!r}")
         results = data.get("results", {})
-        for k in ("summary_file", "multiqc_dir", "variant_stats_file", "report_dir", "report_html", "findings_tsv", "evidence_json"):
+        for k in (
+            "summary_file",
+            "multiqc_dir",
+            "variant_stats_file",
+            "report_dir",
+            "report_html",
+            "findings_tsv",
+            "evidence_json",
+            "denovo_report_dir",
+            "denovo_report_html",
+            "denovo_summary_tsv",
+            "denovo_manifest_json",
+        ):
             print(f"  results.{k}={results.get(k, '')!r}")
         cache = data.get("cache", {})
         for k in (

@@ -19,6 +19,6 @@ cargo test
 scripts/check-genomics.sh
 ```
 
-`scripts/check-genomics.sh` covers Python scanner/report tests, shell syntax, Rust tab metadata, and a native Nextflow stub smoke test when Nextflow is available.
+`scripts/check-genomics.sh` covers Python scanner/report tests, shell syntax, Rust tab metadata, and native/reference plus de novo Nextflow stub smoke tests when Nextflow is available.
 
-The guided setup explains each step before changing anything. The Start Here tab keeps the default path small and moves manual conda/reference controls behind Advanced manual setup.
+The guided setup explains each step before changing anything. The Start Here tab keeps the default path small and moves manual conda/reference controls behind Advanced manual setup. Long-read de novo assembly is exposed as a separate Run Analysis action and uses its own `opengenome-denovo` conda environment.

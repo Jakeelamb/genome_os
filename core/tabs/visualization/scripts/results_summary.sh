@@ -55,6 +55,7 @@ mapfile -t html_reports < <({
 	find_outputs -type f -name 'report_index.html'
 	print_if_file "$(open_genome_manifest_get results.report_html)"
 	find_outputs -type f -name 'open_genome_report.html'
+	find_outputs -type f -name 'denovo_assembly_report.html'
 } | awk '!seen[$0]++')
 mapfile -t findings_tables < <({
 	print_if_file "$(open_genome_manifest_get results.findings_tsv)"

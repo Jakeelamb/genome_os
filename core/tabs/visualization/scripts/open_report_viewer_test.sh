@@ -43,4 +43,18 @@ if [[ "$(python3 "$MANIFEST_CLI" get results.report_html)" != "$report_dir/repor
 	exit 1
 fi
 
-printf 'ok - report viewer finds and records existing HTML report\n'
+rm -rf "$tmp/results"
+denovo_dir="$tmp/denovo-results/report"
+mkdir -p "$denovo_dir"
+printf '<html>denovo</html>\n' >"$denovo_dir/denovo_assembly_report.html"
+python3 "$MANIFEST_CLI" set workflow.outdir "$tmp/denovo-results"
+python3 "$MANIFEST_CLI" set results.report_html ""
+
+output=$(bash "$HERE/open_report_viewer.sh")
+
+if ! grep -q "$denovo_dir/denovo_assembly_report.html" <<<"$output"; then
+	printf 'not ok - report viewer finds de novo report under workflow.outdir\n%s\n' "$output" >&2
+	exit 1
+fi
+
+printf 'ok - report viewer finds and records existing HTML reports\n'

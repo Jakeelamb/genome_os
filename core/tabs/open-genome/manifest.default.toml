@@ -52,6 +52,10 @@ outdir = ""
 params_file = ""
 command_file = ""
 last_run_dir = ""
+denovo_outdir = ""
+denovo_params_file = ""
+denovo_command_file = ""
+denovo_last_run_dir = ""
 
 [results]
 summary_file = ""
@@ -61,6 +65,10 @@ report_dir = ""
 report_html = ""
 findings_tsv = ""
 evidence_json = ""
+denovo_report_dir = ""
+denovo_report_html = ""
+denovo_summary_tsv = ""
+denovo_manifest_json = ""
 
 [cache]
 root = ""
@@ -84,4 +92,8 @@ enabled = true
 
 [[modules]]
 id = "genome_browser"
+enabled = true
+
+[[modules]]
+id = "denovo_assembly"
 enabled = true

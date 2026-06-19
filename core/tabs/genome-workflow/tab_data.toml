@@ -8,6 +8,13 @@ task_list = "RUN"
 multi_select = false
 
 [[data]]
+name = "Run de novo assembly"
+description = "Assemble local long-read data with hifiasm. Best for PacBio HiFi; requires high RAM and disk for human genomes."
+script = "scripts/run_denovo_assembly.sh"
+task_list = "RUN"
+multi_select = false
+
+[[data]]
 name = "Advanced workflow steps"
 multi_select = false
 
@@ -22,6 +29,13 @@ multi_select = false
 name = "Prepare analysis command"
 description = "Create the local workflow command without running it yet."
 script = "scripts/prepare_open_genome_run.sh"
+task_list = "ADV"
+multi_select = false
+
+[[data.entries]]
+name = "Prepare de novo assembly command"
+description = "Create the hifiasm de novo assembly command without running it yet."
+script = "scripts/prepare_denovo_assembly_run.sh"
 task_list = "ADV"
 multi_select = false
 

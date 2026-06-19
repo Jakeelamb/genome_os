@@ -15,6 +15,7 @@ import manifest_cli
 
 FASTQ_SUFFIXES = (".fastq.gz", ".fq.gz", ".fastq", ".fq")
 ASSEMBLY_SUFFIXES = (".fa", ".fasta", ".fna")
+LONG_READ_SUFFIXES = FASTQ_SUFFIXES + ASSEMBLY_SUFFIXES + tuple(f"{s}.gz" for s in ASSEMBLY_SUFFIXES) + (".bam",)
 OPEN_GENOME_COLUMNS = (
     "sample",
     "row_id",
@@ -26,10 +27,15 @@ OPEN_GENOME_COLUMNS = (
     "cram",
     "vcf",
     "assembly",
+    "long_reads",
     "sex",
     "status",
 )
 SAFE_ID_RE = re.compile(r"[^A-Za-z0-9_.-]+")
+DENOVO_READ_NAME_RE = re.compile(
+    r"(^|[._-])(hifi|ccs|ont|nanopore|ultralong|longread|longreads|long-read|long-reads|pacbio|revio)([._-]|$)",
+    flags=re.IGNORECASE,
+)
 
 
 def _safe_id(value: str, default: str = "sample") -> str:
@@ -68,6 +74,10 @@ def _is_assembly(path: Path) -> bool:
     return path.name.endswith(ASSEMBLY_SUFFIXES) or path.name.endswith(tuple(f"{s}.gz" for s in ASSEMBLY_SUFFIXES))
 
 
+def _is_denovo_read_candidate(path: Path) -> bool:
+    return path.name.endswith(LONG_READ_SUFFIXES) and bool(DENOVO_READ_NAME_RE.search(path.name))
+
+
 def _read_token(name: str) -> str | None:
     if re.search(r"(^|[._-])R1([._-]|$)", name, flags=re.IGNORECASE):
         return "R1"
@@ -100,6 +110,8 @@ def _find_fastq_rows(root: Path) -> tuple[list[dict[str, str]], list[str]]:
             continue
         token = _read_token(path.name)
         if token is None:
+            if _is_denovo_read_candidate(path):
+                continue
             warnings.append(f"unpaired/unknown FASTQ read token: {path}")
             continue
         try:
@@ -127,6 +139,7 @@ def _find_fastq_rows(root: Path) -> tuple[list[dict[str, str]], list[str]]:
                 "cram": "",
                 "vcf": "",
                 "assembly": "",
+                "long_reads": "",
                 "sex": "NA",
                 "status": "0",
                 "_lane": lane,
@@ -139,6 +152,8 @@ def _find_alignment_rows(root: Path) -> list[dict[str, str]]:
     rows: list[dict[str, str]] = []
     for path in sorted(root.rglob("*")):
         if not path.is_file():
+            continue
+        if _is_denovo_read_candidate(path):
             continue
         resolved = _resolve_inside(root, path)
         sample = _safe_id(path.stem)
@@ -155,6 +170,7 @@ def _find_alignment_rows(root: Path) -> list[dict[str, str]]:
                     "cram": "",
                     "vcf": "",
                     "assembly": "",
+                    "long_reads": "",
                     "sex": "NA",
                     "status": "0",
                     "_lane": "lane_1",
@@ -173,6 +189,7 @@ def _find_alignment_rows(root: Path) -> list[dict[str, str]]:
                     "cram": str(resolved),
                     "vcf": "",
                     "assembly": "",
+                    "long_reads": "",
                     "sex": "NA",
                     "status": "0",
                     "_lane": "lane_1",
@@ -201,6 +218,7 @@ def _find_vcf_rows(root: Path) -> list[dict[str, str]]:
                     "cram": "",
                     "vcf": str(resolved),
                     "assembly": "",
+                    "long_reads": "",
                     "sex": "NA",
                     "status": "0",
                     "_lane": "lane_1",
@@ -209,10 +227,63 @@ def _find_vcf_rows(root: Path) -> list[dict[str, str]]:
     return rows
 
 
+def _find_denovo_read_rows(root: Path, fastq_rows: list[dict[str, str]] | None = None) -> list[dict[str, str]]:
+    used_fastqs = set()
+    for row in fastq_rows or []:
+        for key in ("fastq_1", "fastq_2"):
+            if row.get(key):
+                used_fastqs.add(Path(row[key]).resolve())
+
+    rows: list[dict[str, str]] = []
+    for path in sorted(root.rglob("*")):
+        if not path.is_file() or not _is_denovo_read_candidate(path):
+            continue
+        resolved = _resolve_inside(root, path)
+        if resolved in used_fastqs:
+            continue
+        sample = path.name
+        for suffix in (
+            ".fastq.gz",
+            ".fq.gz",
+            ".fasta.gz",
+            ".fna.gz",
+            ".fa.gz",
+            ".fastq",
+            ".fq",
+            ".fasta",
+            ".fna",
+            ".fa",
+            ".bam",
+        ):
+            sample = sample.removesuffix(suffix)
+        sample = _safe_id(sample)
+        rows.append(
+            {
+                "sample": sample,
+                "row_id": _safe_id(f"{sample}_denovo"),
+                "lane": "lane_1",
+                "input_type": "denovo_reads",
+                "fastq_1": "",
+                "fastq_2": "",
+                "bam": "",
+                "cram": "",
+                "vcf": "",
+                "assembly": "",
+                "long_reads": str(resolved),
+                "sex": "NA",
+                "status": "0",
+                "_lane": "lane_1",
+            }
+        )
+    return rows
+
+
 def _find_assembly_rows(root: Path) -> list[dict[str, str]]:
     rows: list[dict[str, str]] = []
     for path in sorted(root.rglob("*")):
         if not path.is_file() or not _is_assembly(path):
+            continue
+        if _is_denovo_read_candidate(path):
             continue
         resolved = _resolve_inside(root, path)
         sample = path.name
@@ -231,6 +302,7 @@ def _find_assembly_rows(root: Path) -> list[dict[str, str]]:
                 "cram": "",
                 "vcf": "",
                 "assembly": str(resolved),
+                "long_reads": "",
                 "sex": "NA",
                 "status": "0",
                 "_lane": "lane_1",
@@ -301,15 +373,26 @@ def main(argv: list[str] | None = None) -> int:
     out = args.out or Path(workdir) / "samples" / default_name
 
     fastq_rows, warnings = _find_fastq_rows(root)
+    denovo_read_rows = _find_denovo_read_rows(root, fastq_rows)
     align_rows = _find_alignment_rows(root)
     vcf_rows = _find_vcf_rows(root)
     assembly_rows = _find_assembly_rows(root)
-    rows = fastq_rows + align_rows + vcf_rows + assembly_rows
-    modes = [name for name, found in (("fastq", fastq_rows), ("alignment", align_rows), ("vcf", vcf_rows), ("assembly", assembly_rows)) if found]
+    rows = fastq_rows + denovo_read_rows + align_rows + vcf_rows + assembly_rows
+    modes = [
+        name
+        for name, found in (
+            ("fastq", fastq_rows),
+            ("denovo_reads", denovo_read_rows),
+            ("alignment", align_rows),
+            ("vcf", vcf_rows),
+            ("assembly", assembly_rows),
+        )
+        if found
+    ]
     mode = modes[0] if len(modes) == 1 else "mixed"
 
     if not rows:
-        print(f"No paired FASTQ, BAM/CRAM, VCF, or assembly inputs found under {root}", file=sys.stderr)
+        print(f"No paired FASTQ, long-read, BAM/CRAM, VCF, or assembly inputs found under {root}", file=sys.stderr)
         for warning in warnings:
             print(f"warning: {warning}", file=sys.stderr)
         return 1
@@ -343,7 +426,13 @@ def main(argv: list[str] | None = None) -> int:
     print(f"Detected input mode: {mode}")
     print(f"Rows written: {len(rows)}")
     print("Input type counts:")
-    for name, found in (("fastq", fastq_rows), ("alignment", align_rows), ("vcf", vcf_rows), ("assembly", assembly_rows)):
+    for name, found in (
+        ("fastq", fastq_rows),
+        ("denovo_reads", denovo_read_rows),
+        ("alignment", align_rows),
+        ("vcf", vcf_rows),
+        ("assembly", assembly_rows),
+    ):
         print(f"  {name}: {len(found)}")
     print("Sample rows:")
     for row in rows[:10]:

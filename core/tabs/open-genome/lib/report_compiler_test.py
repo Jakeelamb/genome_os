@@ -21,9 +21,9 @@ class ReportCompilerTests(unittest.TestCase):
             inputs.mkdir()
             samplesheet = root / "samples.csv"
             samplesheet.write_text(
-                "sample,row_id,lane,input_type,fastq_1,fastq_2,bam,cram,vcf,assembly,sex,status\n"
-                "alice,alice_L001,L001,vcf,,,,,/tmp/alice.vcf.gz,,NA,0\n"
-                "bob,bob_L001,L001,vcf,,,,,/tmp/bob.vcf.gz,,NA,0\n",
+                "sample,row_id,lane,input_type,fastq_1,fastq_2,bam,cram,vcf,assembly,long_reads,sex,status\n"
+                "alice,alice_L001,L001,vcf,,,,,/tmp/alice.vcf.gz,,,NA,0\n"
+                "bob,bob_L001,L001,vcf,,,,,/tmp/bob.vcf.gz,,,NA,0\n",
                 encoding="utf-8",
             )
             (inputs / "alice_L001.variant_summary.tsv").write_text(
