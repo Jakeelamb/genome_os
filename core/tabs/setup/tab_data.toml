@@ -1,142 +1,96 @@
-name = "Setup"
+name = "Start Here"
 
 [[data]]
-name = "Guided setup"
-multi_select = false
-
-[[data.entries]]
-name = "Set up this machine"
-description = "Install local tools, create the Open Genome environment, and scan a sequencing folder."
+name = "Start guided setup"
+description = "Recommended first step. Choose where results stay, select your sequencing files, and check what is still missing."
 script = "scripts/first_time_setup.sh"
-task_list = "ENV CFG DATA"
-multi_select = false
-
-[[data.entries]]
-name = "Import sequencing files"
-description = "Choose a sequencing file or folder, then create Open Genome and Sarek-compatible samplesheets."
-script = "scripts/scan_sequencing_folder.sh"
-task_list = "CFG DATA"
-multi_select = false
-
-[[data.entries]]
-name = "Setup checklist"
-description = "Show what is ready, what is missing, and which setup action to run next."
-script = "scripts/show_paths.sh"
-task_list = "CFG"
+task_list = "START"
 multi_select = false
 
 [[data]]
-name = "Advanced setup"
+name = "Check what is ready"
+description = "Plain-language checklist showing what is ready, what is missing, and what to do next."
+script = "scripts/show_paths.sh"
+task_list = "CHECK"
+multi_select = false
+
+[[data]]
+name = "Try sample data"
+description = "Use a small public sample so you can see the workflow without using your own genome first."
+script = "scripts/use_sample_human_dataset.sh"
+task_list = "DEMO"
+multi_select = false
+
+[[data]]
+name = "Load existing results"
+description = "Choose a previous Open Genome results folder so the report can be opened without rerunning analysis."
+script = "scripts/set_results_path.sh"
+task_list = "RESULTS"
+multi_select = false
+
+[[data]]
+name = "Advanced manual setup"
 multi_select = false
 
 [[data.entries]]
-name = "Install private Miniforge/Conda"
-description = "Installs a user-local Miniforge under Open Genome data and records conda.conda_exe."
-script = "scripts/install_private_miniforge.sh"
-task_list = "ENV CFG"
-multi_select = false
-
-[[data.entries]]
-name = "Install / update: Open Genome env"
-description = "Installs the core Open Genome conda environment with workflow, GATK/Picard, QC, SRA, NCBI, and genomic tools."
+name = "Install or update local tools"
+description = "Install the local Open Genome tool environments. Your genome data stays on this computer."
 script = "scripts/conda_install_all_recommended.sh"
-task_list = "ENV"
+task_list = "TOOLS"
 multi_select = false
 
 [[data.entries]]
-name = "Probe conda"
-description = "Resolve installer from manifest and print version."
-script = "scripts/conda_probe.sh"
-task_list = "CHK"
+name = "Use existing conda"
+description = "Detect an existing conda or mamba install and save it for Open Genome."
+script = "scripts/use_existing_conda.sh"
+task_list = "TOOLS"
 multi_select = false
 
 [[data.entries]]
-name = "Choose output folder"
-description = "Pick or paste where scratch files and results should be stored."
+name = "Install private conda"
+description = "Optional fallback when you do not already have conda. Installs under your user account."
+script = "scripts/install_private_miniforge.sh"
+task_list = "TOOLS"
+multi_select = false
+
+[[data.entries]]
+name = "Choose results folder"
+description = "Pick where scratch files and results should be stored."
 script = "scripts/set_workdir.sh"
-task_list = "CFG"
+task_list = "SETUP"
+multi_select = false
+
+[[data.entries]]
+name = "Choose sequencing files"
+description = "Choose a FASTQ, BAM, CRAM, VCF, assembly file, or a folder containing them."
+script = "scripts/scan_sequencing_folder.sh"
+task_list = "SETUP"
 multi_select = false
 
 [[data.entries]]
 name = "Choose reference genome"
-description = "Pick or paste a reference FASTA file or a folder containing reference files."
+description = "Pick a reference FASTA file or a folder containing reference files."
 script = "scripts/set_reference_path.sh"
-task_list = "CFG REF"
+task_list = "SETUP"
 multi_select = false
 
 [[data.entries]]
-name = "Choose sequencing data"
-description = "Pick or paste a FASTQ, BAM, CRAM, VCF, assembly file, or a folder containing them."
-script = "scripts/set_dataset_path.sh"
-task_list = "CFG DATA"
+name = "Check reference files"
+description = "Check whether the configured GRCh38 reference and index files are ready."
+script = "../genome-workflow/scripts/reference_bundle_status.sh"
+task_list = "CHECK"
 multi_select = false
 
 [[data.entries]]
-name = "Set CPU thread cap"
-description = "Shows logical CPUs; saves paths.threads in manifest.toml."
+name = "Download reference genome"
+description = "Download public GRCh38 reference files to your local Open Genome cache."
+script = "../genome-workflow/scripts/fetch_gatk_grch38_bundle.sh"
+task_list = "DATA"
+multi_select = false
+
+[[data.entries]]
+name = "Set CPU usage limit"
+description = "Limit how many CPU threads Open Genome workflows may use."
 script = "scripts/show_cpu_count.sh"
-task_list = "CFG"
-multi_select = false
-
-[[data.entries]]
-name = "List bundled conda modules"
-description = "Shows modules/<id> shipped with this build (metadata + pins)."
-script = "scripts/list_open_genome_modules.sh"
-task_list = "CHK"
-multi_select = false
-
-[[data.entries]]
-name = "Install one env: Open Genome toolbox"
-description = "One conda environment for workflow, GATK/Picard, QC, SRA, NCBI, and genomic tools. IGV is separate."
-script = "scripts/conda_install_opengenome.sh"
-task_list = "ENV"
-multi_select = false
-
-[[data.entries]]
-name = "Install one env: genomic tools"
-description = "samtools, bcftools, bwa, minimap2 - pinned."
-script = "scripts/conda_install_genomic_tools.sh"
-task_list = "ENV"
-multi_select = false
-
-[[data.entries]]
-name = "Install one env: GATK + Picard"
-description = "GATK4, Picard, samtools, bcftools, bwa, and htslib."
-script = "scripts/conda_install_gatk.sh"
-task_list = "ENV PIPE"
-multi_select = false
-
-[[data.entries]]
-name = "Install one env: QC tools"
-description = "FastQC, MultiQC, mosdepth, seqkit, bcftools, and samtools."
-script = "scripts/conda_install_qc.sh"
-task_list = "ENV DATA"
-multi_select = false
-
-[[data.entries]]
-name = "Install one env: Nextflow"
-description = "Nextflow + OpenJDK."
-script = "scripts/conda_install_nextflow.sh"
-task_list = "ENV PIPE"
-multi_select = false
-
-[[data.entries]]
-name = "Install one env: SRA toolkit"
-description = "Pinned sra-tools via bioconda."
-script = "scripts/conda_install_sratoolkit.sh"
-task_list = "ENV DATA"
-multi_select = false
-
-[[data.entries]]
-name = "Install one env: NCBI datasets"
-description = "ncbi-datasets-cli."
-script = "scripts/conda_install_ncbi_datasets.sh"
-task_list = "ENV DATA"
-multi_select = false
-
-[[data.entries]]
-name = "Install one env: genome browser"
-description = "IGV + JDK."
-script = "scripts/conda_install_genome_browser.sh"
-task_list = "ENV"
+task_list = "SETUP"
 multi_select = false

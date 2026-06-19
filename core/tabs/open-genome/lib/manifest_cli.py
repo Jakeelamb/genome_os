@@ -126,7 +126,20 @@ def _write_manifest(path: Path, data: dict) -> None:
         lines,
         "cache",
         cache,
-        ("root", "release_manifest", "clinvar_vcf", "clinvar_tbi", "dbsnp_vcf", "dbsnp_tbi", "pharmcat_jar"),
+        (
+            "root",
+            "release_manifest",
+            "clinvar_vcf",
+            "clinvar_tbi",
+            "dbsnp_vcf",
+            "dbsnp_tbi",
+            "gnomad_vcf",
+            "gnomad_tbi",
+            "vep_cache",
+            "snpeff_db",
+            "snpeff_config",
+            "pharmcat_jar",
+        ),
     )
 
     for m in data.get("modules", []):
@@ -268,7 +281,20 @@ def main(argv: list[str]) -> int:
         for k in ("summary_file", "multiqc_dir", "variant_stats_file", "report_dir", "report_html", "findings_tsv", "evidence_json"):
             print(f"  results.{k}={results.get(k, '')!r}")
         cache = data.get("cache", {})
-        for k in ("root", "release_manifest", "clinvar_vcf", "clinvar_tbi", "dbsnp_vcf", "dbsnp_tbi", "pharmcat_jar"):
+        for k in (
+            "root",
+            "release_manifest",
+            "clinvar_vcf",
+            "clinvar_tbi",
+            "dbsnp_vcf",
+            "dbsnp_tbi",
+            "gnomad_vcf",
+            "gnomad_tbi",
+            "vep_cache",
+            "snpeff_db",
+            "snpeff_config",
+            "pharmcat_jar",
+        ):
             print(f"  cache.{k}={cache.get(k, '')!r}")
         for m in data.get("modules", []):
             print(f"  module {m.get('id')} enabled={m.get('enabled', True)}")

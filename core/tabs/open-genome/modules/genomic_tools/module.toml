@@ -1,3 +1,0 @@
-id = "genomic_tools"
-display_name = "Genomic tools bundle"
-description = "Pinned alignment / BAM / variant utilities (conda-forge + bioconda)."

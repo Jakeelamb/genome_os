@@ -69,6 +69,7 @@ impl Filter {
                     let node = tab.tree.get(node_id).unwrap();
                     if node.value().name.to_lowercase().contains(&query_lower)
                         && !node.has_children()
+                        && !node.value().is_header
                     {
                         self.items.push(ListEntry {
                             node: node.value().clone(),

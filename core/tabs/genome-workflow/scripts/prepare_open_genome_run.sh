@@ -15,6 +15,11 @@ dict=$(open_genome_manifest_get reference.dict)
 dbsnp=$(open_genome_manifest_get reference.dbsnp)
 known_indels=$(open_genome_manifest_get reference.known_indels)
 clinvar=$(open_genome_manifest_get cache.clinvar_vcf)
+gnomad=$(open_genome_manifest_get cache.gnomad_vcf)
+gnomad_tbi=$(open_genome_manifest_get cache.gnomad_tbi)
+vep_cache=$(open_genome_manifest_get cache.vep_cache)
+snpeff_db=$(open_genome_manifest_get cache.snpeff_db)
+snpeff_config=$(open_genome_manifest_get cache.snpeff_config)
 pharmcat_jar=$(open_genome_manifest_get cache.pharmcat_jar)
 threads=$(open_genome_paths_get threads)
 test -n "$threads" || threads=2
@@ -47,15 +52,15 @@ optional_file_path() {
 
 if test -z "$samplesheet" || ! test -f "$samplesheet"; then
 	echo "Missing Open Genome samplesheet: ${samplesheet:-unset}" >&2
-	echo "Run Setup -> Import sequencing files first." >&2
+	echo "Run Start Here -> Start guided setup first." >&2
 	exit 1
 fi
 if test -z "$fasta" || ! test -f "$fasta"; then
 	echo "Missing reference FASTA: ${fasta:-unset}" >&2
-	echo "Run Assembly -> Fetch/index GRCh38 or set a reference first." >&2
+	echo "Use Start Here -> Advanced manual setup -> Download reference genome, or choose a reference first." >&2
 	exit 1
 fi
-for label_path in "samplesheet:$samplesheet" "fasta:$fasta" "fai:$fai" "dict:$dict" "dbsnp:$dbsnp" "known_indels:$known_indels" "clinvar:$clinvar" "pharmcat_jar:$pharmcat_jar"; do
+for label_path in "samplesheet:$samplesheet" "fasta:$fasta" "fai:$fai" "dict:$dict" "dbsnp:$dbsnp" "known_indels:$known_indels" "clinvar:$clinvar" "gnomad:$gnomad" "gnomad_tbi:$gnomad_tbi" "vep_cache:$vep_cache" "snpeff_db:$snpeff_db" "snpeff_config:$snpeff_config" "pharmcat_jar:$pharmcat_jar"; do
 	label=${label_path%%:*}
 	path=${label_path#*:}
 	if test -n "$path"; then
@@ -65,6 +70,11 @@ done
 dbsnp=$(optional_file_path "$dbsnp")
 known_indels=$(optional_file_path "$known_indels")
 clinvar=$(optional_file_path "$clinvar")
+gnomad=$(optional_file_path "$gnomad")
+gnomad_tbi=$(optional_file_path "$gnomad_tbi")
+vep_cache=$(optional_file_path "$vep_cache")
+snpeff_db=$(optional_file_path "$snpeff_db")
+snpeff_config=$(optional_file_path "$snpeff_config")
 pharmcat_jar=$(optional_file_path "$pharmcat_jar")
 require_file "reference FASTA index (.fai)" "$fai"
 require_file "reference sequence dictionary (.dict)" "$dict"
@@ -84,6 +94,20 @@ if test -n "$clinvar"; then
 	require_file "ClinVar VCF" "$clinvar"
 	require_file "ClinVar VCF index" "$clinvar.tbi"
 	enable_clinvar=true
+fi
+if test -n "$gnomad"; then
+	require_file "gnomAD VCF" "$gnomad"
+	if test -z "$gnomad_tbi"; then
+		gnomad_tbi="$gnomad.tbi"
+	fi
+	require_file "gnomAD VCF index" "$gnomad_tbi"
+fi
+if test -n "$vep_cache" && ! test -d "$vep_cache"; then
+	echo "Missing VEP cache directory: $vep_cache" >&2
+	missing=1
+fi
+if test -n "$snpeff_config"; then
+	require_file "SnpEff config" "$snpeff_config"
 fi
 enable_pgx=false
 if test -n "$pharmcat_jar"; then
@@ -105,6 +129,7 @@ mkdir -p "$outdir" "$workdir/nextflow-work-opengenome" "$workdir/bin"
 
 command_file="$workdir/bin/run_open_genome_pipeline.sh"
 params_file="$workdir/open-genome.params.txt"
+log_file="$workdir/open-genome.nextflow.log"
 cache_root=$(open_genome_manifest_get cache.root)
 if test -z "$cache_root"; then
 	cache_root="$(open_genome_cache_dir)"
@@ -120,6 +145,11 @@ dict=$dict
 dbsnp=$dbsnp
 known_indels=$known_indels
 clinvar=$clinvar
+gnomad=$gnomad
+gnomad_tbi=$gnomad_tbi
+vep_cache=$vep_cache
+snpeff_db=$snpeff_db
+snpeff_config=$snpeff_config
 pharmcat_jar=$pharmcat_jar
 cache_dir=$cache_root
 enable_clinvar=$enable_clinvar
@@ -137,7 +167,7 @@ EOF
 	if test -n "$conda_exe"; then
 		printf 'export PATH=%q:$PATH\n' "$(dirname "$conda_exe")"
 	fi
-	printf 'nextflow run %q -profile opengenome -resume -w %q \\\n' "$pipeline_dir" "$workdir/nextflow-work-opengenome"
+	printf 'nextflow -log %q run %q -profile opengenome -resume -w %q \\\n' "$log_file" "$pipeline_dir" "$workdir/nextflow-work-opengenome"
 	printf '  --samplesheet %q \\\n' "$samplesheet"
 	printf '  --outdir %q \\\n' "$outdir"
 	printf '  --fasta %q \\\n' "$fasta"
@@ -151,6 +181,21 @@ EOF
 	fi
 	if test -n "$clinvar"; then
 		printf '  --clinvar %q \\\n' "$clinvar"
+	fi
+	if test -n "$gnomad"; then
+		printf '  --gnomad %q \\\n' "$gnomad"
+	fi
+	if test -n "$gnomad_tbi"; then
+		printf '  --gnomad_tbi %q \\\n' "$gnomad_tbi"
+	fi
+	if test -n "$vep_cache"; then
+		printf '  --vep_cache %q \\\n' "$vep_cache"
+	fi
+	if test -n "$snpeff_db"; then
+		printf '  --snpeff_db %q \\\n' "$snpeff_db"
+	fi
+	if test -n "$snpeff_config"; then
+		printf '  --snpeff_config %q \\\n' "$snpeff_config"
 	fi
 	if test -n "$pharmcat_jar"; then
 		printf '  --pharmcat_jar %q \\\n' "$pharmcat_jar"

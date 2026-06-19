@@ -1,18 +1,14 @@
 name = "Reports"
 
 [[data]]
-name = "Report sources"
-multi_select = false
-
-[[data.entries]]
-name = "Show report sources"
+name = "Review data sources"
 description = "Lists the tools and public datasets Open Genome can use for digestible reports without hiding raw evidence."
 script = "scripts/report_sources.sh"
 task_list = "DATA CHK"
 multi_select = false
 
-[[data.entries]]
-name = "Show report boundaries"
+[[data]]
+name = "Review interpretation limits"
 description = "Shows what Open Genome should report now, what should stay experimental, and what needs careful disclaimers."
 script = "scripts/report_boundaries.sh"
 task_list = "DATA CHK"

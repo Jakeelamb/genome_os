@@ -1,8 +1,5 @@
 directories = [
     "setup",
-    "assembly",
-    "variant-detection",
+    "genome-workflow",
     "visualization",
-    "reports",
-    "resources",
 ]

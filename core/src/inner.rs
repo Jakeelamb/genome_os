@@ -67,6 +67,7 @@ pub fn get_tabs(validate: bool) -> TabList {
                 command: Command::None,
                 task_list: String::new(),
                 multi_select: false,
+                is_header: false,
             }));
             let mut root = tree.root_mut();
             create_directory(data, &mut root, &directory, validate, true);
@@ -100,11 +101,13 @@ struct Entry {
     #[serde(default)]
     preconditions: Option<Vec<Precondition>>,
     #[serde(flatten)]
-    entry_type: EntryType,
+    entry_type: Option<EntryType>,
     #[serde(default)]
     task_list: String,
     #[serde(default = "default_true")]
     multi_select: bool,
+    #[serde(default)]
+    section: bool,
 }
 
 fn default_true() -> bool {
@@ -171,7 +174,7 @@ fn filter_entries(entries: &mut Vec<Entry>) {
         if !entry.is_supported() {
             return false;
         }
-        if let EntryType::Entries(entries) = &mut entry.entry_type {
+        if let Some(EntryType::Entries(entries)) = &mut entry.entry_type {
             filter_entries(entries);
             !entries.is_empty()
         } else {
@@ -191,26 +194,28 @@ fn create_directory(
         let multi_select = parent_multi_select && entry.multi_select;
 
         match entry.entry_type {
-            EntryType::Entries(entries) => {
+            Some(EntryType::Entries(entries)) => {
                 let mut node = node.append(Rc::new(ListNode {
                     name: entry.name,
                     description: entry.description,
                     command: Command::None,
                     task_list: String::new(),
                     multi_select,
+                    is_header: false,
                 }));
                 create_directory(entries, &mut node, command_dir, validate, multi_select);
             }
-            EntryType::Command(command) => {
+            Some(EntryType::Command(command)) => {
                 node.append(Rc::new(ListNode {
                     name: entry.name,
                     description: entry.description,
                     command: Command::Raw(command),
                     task_list: String::new(),
                     multi_select,
+                    is_header: false,
                 }));
             }
-            EntryType::Script(script) => {
+            Some(EntryType::Script(script)) => {
                 let script = command_dir.join(script);
                 if !script.exists() {
                     panic!("Script {} does not exist", script.display());
@@ -227,9 +232,24 @@ fn create_directory(
                         },
                         task_list: entry.task_list,
                         multi_select,
+                        is_header: false,
                     }));
                 }
             }
+            None if entry.section => {
+                node.append(Rc::new(ListNode {
+                    name: entry.name,
+                    description: entry.description,
+                    command: Command::None,
+                    task_list: String::new(),
+                    multi_select: false,
+                    is_header: true,
+                }));
+            }
+            None => panic!(
+                "Entry {} must define script, command, entries, or section",
+                entry.name
+            ),
         }
     }
 }
@@ -311,17 +331,54 @@ mod tab_directories_tests {
         let tabs = get_tabs(false);
         let names: Vec<_> = tabs.iter().map(|tab| tab.name.as_str()).collect();
 
-        assert!(names.contains(&"Setup"));
-        assert!(names.contains(&"Assembly"));
-        assert!(names.contains(&"Visualization"));
+        assert_eq!(names, vec!["Start Here", "Run Analysis", "Results"]);
         assert!(tabs
             .iter()
             .flat_map(|tab| tab.tree.root().descendants())
-            .any(|node| node.value().name == "Prepare Open Genome native run"));
+            .any(|node| node.value().name == "Run local genome analysis"));
         assert!(tabs
             .iter()
             .flat_map(|tab| tab.tree.root().descendants())
-            .any(|node| node.value().name == "Summarize local workflow outputs"));
+            .any(|node| node.value().name == "Explain my results"));
+
+        let setup = tabs.iter().find(|tab| tab.name == "Start Here").unwrap();
+        let root = setup.tree.root();
+        let setup_items: Vec<_> = root
+            .children()
+            .map(|node| (node.value().name.as_str(), node.has_children()))
+            .collect();
+        assert_eq!(
+            setup_items,
+            vec![
+                ("Start guided setup", false),
+                ("Check what is ready", false),
+                ("Try sample data", false),
+                ("Load existing results", false),
+                ("Advanced manual setup", true),
+            ]
+        );
+        assert!(root.children().all(|node| {
+            node.has_children() || !matches!(&node.value().command, Command::None)
+        }));
+
+        let workflow = tabs
+            .iter()
+            .find(|tab| tab.name == "Run Analysis")
+            .unwrap();
+        let workflow_root = workflow.tree.root();
+        assert!(workflow_root
+            .children()
+            .any(|node| node.value().name == "Run local genome analysis"));
+
+        for tab_name in ["Run Analysis", "Results"] {
+            let tab = tabs.iter().find(|tab| tab.name == tab_name).unwrap();
+            assert!(
+                tab.tree.root()
+                    .children()
+                    .any(|node| !matches!(&node.value().command, Command::None)),
+                "{tab_name} should expose at least one direct action"
+            );
+        }
     }
 }
 

@@ -7,9 +7,13 @@ export OPEN_GENOME_BUNDLE="$TABS/open-genome"
 
 modules="
 opengenome
+genome_browser
 "
 
-echo "Installing/updating the recommended Open Genome conda environment."
+echo "Installing/updating Open Genome tools."
+echo "Open Genome uses the fewest compatible conda environments:"
+echo "  - opengenome for workflows and command-line genomics tools"
+echo "  - og-genome-browser for IGV, because current IGV and GATK require different Java versions"
 echo "This downloads public tool packages only; it does not upload genome data."
 for module in $modules; do
 	echo ""
@@ -18,4 +22,4 @@ for module in $modules; do
 done
 
 echo ""
-echo "Recommended environment is installed or updated."
+echo "Open Genome tools are installed or updated."

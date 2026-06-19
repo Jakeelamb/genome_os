@@ -8,9 +8,24 @@ _OG_LIB_DIR=$(CDPATH= cd -- "$HERE/../../setup/scripts" && pwd)
 
 open_genome_bootstrap_manifest
 command_file=$(open_genome_manifest_get workflow.command_file)
+expected_pipeline="$OPEN_GENOME_BUNDLE/pipelines/open-genome"
+needs_prepare=false
 if test -z "$command_file" || ! test -f "$command_file"; then
-	echo "No Open Genome command file found. Run 'Prepare Open Genome native run' first." >&2
-	exit 1
+	echo "No Open Genome command file found. Preparing the workflow now."
+	needs_prepare=true
+elif ! grep -Fq "$expected_pipeline" "$command_file"; then
+	echo "Open Genome command file was prepared for a different app bundle. Refreshing it now."
+	needs_prepare=true
+fi
+
+if test "$needs_prepare" = true; then
+	echo ""
+	bash "$HERE/prepare_open_genome_run.sh"
+	command_file=$(open_genome_manifest_get workflow.command_file)
+	if test -z "$command_file" || ! test -f "$command_file"; then
+		echo "Could not prepare an Open Genome command file." >&2
+		exit 1
+	fi
 fi
 
 echo "About to run local Open Genome native pipeline:"
@@ -33,6 +48,10 @@ open_genome_manifest_set workflow.last_run_dir "$workdir/nextflow-work-opengenom
 outdir=$(open_genome_manifest_get workflow.outdir)
 report_dir="$outdir/report"
 open_genome_manifest_set results.report_dir "$report_dir"
-open_genome_manifest_set results.report_html "$report_dir/open_genome_report.html"
+if test -f "$report_dir/report_index.html"; then
+	open_genome_manifest_set results.report_html "$report_dir/report_index.html"
+else
+	open_genome_manifest_set results.report_html "$report_dir/open_genome_report.html"
+fi
 open_genome_manifest_set results.findings_tsv "$report_dir/findings.tsv"
 open_genome_manifest_set results.evidence_json "$report_dir/evidence.json"

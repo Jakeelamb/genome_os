@@ -1,3 +1,0 @@
-id = "nextflow"
-display_name = "Nextflow runtime"
-description = "Nextflow workflow engine with OpenJDK (JRE constrained in environment.yml)."

@@ -69,10 +69,19 @@ clinvar_vcf = ""
 clinvar_tbi = ""
 dbsnp_vcf = ""
 dbsnp_tbi = ""
+gnomad_vcf = ""
+gnomad_tbi = ""
+vep_cache = ""
+snpeff_db = ""
+snpeff_config = ""
 pharmcat_jar = ""
 
 # Module ids match directories under open-genome/modules/<id>/
 
 [[modules]]
 id = "opengenome"
+enabled = true
+
+[[modules]]
+id = "genome_browser"
 enabled = true

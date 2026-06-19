@@ -144,6 +144,13 @@ fn setup_path_action(command: &Command) -> Option<SetupPathAction> {
             script: file.clone(),
             manifest_key: "paths.dataset",
         })
+    } else if file.ends_with("setup/scripts/set_results_path.sh") {
+        Some(SetupPathAction {
+            title: "Choose Existing Results Folder",
+            mode: FilePickerMode::Directory,
+            script: file.clone(),
+            manifest_key: "workflow.outdir",
+        })
     } else {
         None
     }
@@ -199,6 +206,20 @@ fn setup_script_command(script: &Path, selected_path: &Path) -> RunningCommand {
 
 fn shell_quote(value: &str) -> String {
     format!("'{}'", value.replace('\'', "'\\''"))
+}
+
+fn is_action_node(node: &ListNode) -> bool {
+    !node.is_header && !matches!(&node.command, Command::None)
+}
+
+fn section_header(name: &str, width: usize) -> String {
+    let label = format!(" {} ", name.to_ascii_uppercase());
+    if width <= label.len() {
+        return label.trim().to_string();
+    }
+    let left = 4.min((width - label.len()) / 2);
+    let right = width.saturating_sub(left + label.len());
+    format!("{}{}{}", "-".repeat(left), label, "-".repeat(right))
 }
 
 impl AppState {
@@ -301,12 +322,12 @@ impl AppState {
         match command {
             Command::LocalFile { file, .. } => {
                 let path = file.to_string_lossy();
-                path.ends_with("/gaming/steam-launcher.sh")
-                    || path.ends_with("/gaming/lutris-launcher.sh")
-                    || path.ends_with("/gaming/retroarch-launcher.sh")
-                    || path.ends_with("/gaming/heroic-launcher.sh")
-                    || path.ends_with("/gaming/protonplus.sh")
-                    || path.ends_with("/gaming/protonup-qt.sh")
+                path.ends_with("/setup/scripts/show_paths.sh")
+                    || path.ends_with("/genome-workflow/scripts/reference_bundle_status.sh")
+                    || path.ends_with("/visualization/scripts/open_report_viewer.sh")
+                    || path.ends_with("/visualization/scripts/results_summary.sh")
+                    || path.ends_with("/reports/scripts/report_boundaries.sh")
+                    || path.ends_with("/reports/scripts/report_sources.sh")
             }
             _ => false,
         }
@@ -315,12 +336,14 @@ impl AppState {
     fn get_list_item_shortcut(&self) -> Box<[Shortcut]> {
         if self.selected_item_is_dir() {
             shortcuts!(("Open group", ["l", "Right", "Enter"]))
-        } else {
+        } else if self.selected_item_is_cmd() {
             shortcuts!(
                 ("Run action", ["l", "Right", "Enter"]),
                 ("Preview action", ["p"]),
                 ("Action details", ["d"])
             )
+        } else {
+            shortcuts!()
         }
     }
 
@@ -594,7 +617,13 @@ impl AppState {
                     };
                     ("", ms_style)
                 };
-                if *has_children {
+                if node.is_header {
+                    Line::styled(
+                        section_header(&node.name, list_content_width),
+                        self.theme.unfocused_color(),
+                    )
+                    .patch_style(list_dim_style)
+                } else if *has_children {
                     Line::styled(
                         format!("{}  {}", self.theme.dir_icon(), node.name,),
                         self.theme.dir_color(),
@@ -958,7 +987,7 @@ impl AppState {
         }
 
         if let Some(item) = self.filter.item_list().get(selected_index) {
-            if !item.has_children {
+            if is_action_node(&item.node) {
                 return Some(item.node.clone());
             }
         }
@@ -1007,13 +1036,24 @@ impl AppState {
         self.filter
             .item_list()
             .get(selected_index)
-            .is_some_and(|i| i.has_children)
+            .is_some_and(|i| i.has_children && !i.node.is_header)
     }
 
     pub fn selected_item_is_cmd(&self) -> bool {
-        // Any item that is not a directory or up directory (..) must be a command
-        self.selection.selected().is_some()
-            && !(self.selected_item_is_up_dir() || self.selected_item_is_dir())
+        let mut selected_index = self.selection.selected().unwrap_or(0);
+
+        if !self.at_root() {
+            if selected_index == 0 {
+                return false;
+            } else {
+                selected_index = selected_index.saturating_sub(1);
+            }
+        }
+
+        self.filter
+            .item_list()
+            .get(selected_index)
+            .is_some_and(|item| is_action_node(&item.node))
     }
 
     pub fn selected_item_is_up_dir(&self) -> bool {
@@ -1187,5 +1227,61 @@ impl AppState {
         let inner_width = block.inner(area).width as usize;
         let text = Text::from(info.render_lines(&self.theme, inner_width));
         frame.render_widget(Paragraph::new(text).block(block), area);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use ratatui::{backend::TestBackend, Terminal};
+
+    #[test]
+    fn setup_results_path_uses_native_directory_picker() {
+        let command = Command::LocalFile {
+            executable: "sh".to_string(),
+            args: Vec::new(),
+            file: PathBuf::from("/tmp/open_genome_scripts/setup/scripts/set_results_path.sh"),
+        };
+
+        let action = setup_path_action(&command).expect("results action should use picker");
+
+        assert_eq!(action.title, "Choose Existing Results Folder");
+        assert!(matches!(action.mode, FilePickerMode::Directory));
+        assert_eq!(action.manifest_key, "workflow.outdir");
+    }
+
+    #[test]
+    fn render_setup_snapshot_when_requested() {
+        let Some(path) = std::env::var_os("OPEN_GENOME_SETUP_TAB_SNAPSHOT") else {
+            return;
+        };
+
+        let mut state = AppState::new(Args {
+            config: None,
+            theme: Theme::Default,
+            skip_confirmation: false,
+            override_validation: false,
+            size_bypass: false,
+            mouse: false,
+            bypass_root: true,
+        });
+        let backend = TestBackend::new(140, 42);
+        let mut terminal = Terminal::new(backend).unwrap();
+
+        terminal.draw(|frame| state.draw(frame)).unwrap();
+
+        let buffer = terminal.backend().buffer();
+        let area = buffer.area;
+        let mut lines = Vec::new();
+        for y in area.y..area.y + area.height {
+            let mut line = String::new();
+            for x in area.x..area.x + area.width {
+                if let Some(cell) = buffer.cell((x, y)) {
+                    line.push_str(cell.symbol());
+                }
+            }
+            lines.push(line.trim_end().to_string());
+        }
+        std::fs::write(path, lines.join("\n")).unwrap();
     }
 }

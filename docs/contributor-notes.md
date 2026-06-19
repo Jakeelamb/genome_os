@@ -5,10 +5,12 @@ Open Genome inherits a Rust TUI structure from Linutil but the user-facing produ
 ## Local Development
 
 ```bash
-cargo run -p linutil_tui
+cargo run -p opengenome_tui
 ```
 
 The main embedded workflow content lives under `core/tabs/`. User-facing setup scripts should keep prompts clear, local-first, and explicit about downloads.
+
+Readiness/status checks should stay read-only. Use `core/tabs/open-genome/lib/setup_status.py` for setup state evaluation, and keep mutating behavior in explicit setup or workflow action scripts.
 
 ## Expected Checks
 
@@ -16,7 +18,7 @@ Run these before opening a pull request:
 
 ```bash
 cargo fmt --check
-cargo check -p linutil_tui --all-features
+cargo check -p opengenome_tui --all-features
 cargo test
 scripts/check-genomics.sh
 ```

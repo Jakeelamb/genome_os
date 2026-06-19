@@ -5,10 +5,10 @@ _OG_LIB_DIR=$(CDPATH= cd -- "$(dirname "$0")" && pwd)
 . "$_OG_LIB_DIR/open_genome_lib.sh"
 
 cpus=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo "?")
-echo "Logical CPUs reported: $cpus"
+echo "Logical CPUs available: $cpus"
 
 open_genome_bootstrap_manifest
-printf 'Optional: set max threads in manifest (empty to clear): '
+printf 'Optional: set CPU thread limit for Open Genome workflows (empty to clear): '
 read -r threads || true
 open_genome_paths_set threads "${threads:-}"
 python3 "$OPEN_GENOME_MANIFEST_CLI" show

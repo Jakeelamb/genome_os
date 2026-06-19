@@ -1,3 +1,0 @@
-id = "qc"
-display_name = "QC and summaries"
-description = "FastQC, MultiQC, mosdepth, and seqkit for local read, alignment, and VCF summaries."

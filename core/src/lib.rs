@@ -19,7 +19,7 @@ pub enum Command {
         // The file path is included within the arguments; don't pass this in addition
         file: PathBuf,
     },
-    None, // Directory
+    None, // Directory or non-action header
 }
 
 #[derive(Clone, Hash, Eq, PartialEq)]
@@ -35,6 +35,7 @@ pub struct ListNode {
     pub command: Command,
     pub task_list: String,
     pub multi_select: bool,
+    pub is_header: bool,
 }
 
 impl Tab {
@@ -62,6 +63,7 @@ mod tests {
             command: Command::Raw("echo 'cat memes 🙀'".to_string()),
             task_list: "".to_string(),
             multi_select: false,
+            is_header: false,
         });
 
         Tab {

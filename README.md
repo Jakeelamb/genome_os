@@ -9,21 +9,21 @@ Open Genome helps privacy-minded users set up local genomics tooling, import seq
 Run the latest GitHub release:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/Jakeelamb/genome_os/main/start.sh | sh
+curl -fsSL https://raw.githubusercontent.com/Jakeelamb/opengenome/main/start.sh | sh
 ```
 
 Or clone and run from source:
 
 ```bash
-git clone https://github.com/Jakeelamb/genome_os.git
-cd genome_os
-cargo run -p linutil_tui
+git clone https://github.com/Jakeelamb/opengenome.git
+cd opengenome
+cargo run -p opengenome_tui
 ```
 
 ## Run from source
 
 ```bash
-cargo run -p linutil_tui
+cargo run -p opengenome_tui
 ```
 
 The TUI uses a built-in animated DNA logo by default and does not require a sibling checkout or private path dependency. Set `OPEN_GENOME_USE_PNG_LOGO=1` to use the bundled PNG fallback. The Nix package builds the same way: `nix build .#default`.
@@ -31,25 +31,25 @@ The TUI uses a built-in animated DNA logo by default and does not require a sibl
 Release binary (workspace default):
 
 ```bash
-cargo build --release -p linutil_tui
-# target/release/linutil
+cargo build --release -p opengenome_tui
+# target/release/opengenome
 ```
 
 ### CLI flags
 
 ```bash
-cargo run -p linutil_tui -- --help
+cargo run -p opengenome_tui -- --help
 ```
 
 Linutil-compatible options still apply: `--config`, `--theme`, `--skip-confirmation`, `--override-validation`, `--size-bypass`, `--mouse`, `--bypass-root`.
 
 ## First Run
 
-1. Open `Setup -> Automated setup script` for the native guided path flow.
-2. Choose the output/work folder with the file picker.
-3. Optionally import sequencing files and choose an existing reference genome from the picker.
-4. Run `Setup -> Install / update Open Genome tools` if the checklist shows missing tools.
-5. Review `Setup -> Setup checklist` anytime; it is read-only.
+1. Open `Start Here -> Start guided setup`.
+2. Choose where results stay and select sequencing files with the native picker.
+3. Use `Start Here -> Check what is ready` anytime; it is read-only.
+4. Run locally with `Run Analysis -> Run local genome analysis`.
+5. Review results with `Results -> Open my report` or `Results -> Explain my results`.
 
 ## Configuration (manifest + conda)
 
@@ -58,11 +58,13 @@ Linutil-compatible options still apply: `--config`, `--theme`, `--skip-confirmat
 - **Paths:** `paths.reference`, `paths.dataset`, `paths.workdir`, `paths.threads`.
 - **Conda:** Open Genome can reuse an existing `conda`/`mamba` executable or install private Miniforge/Conda under `$XDG_DATA_HOME/open-genome/miniforge`.
 - **Setup path selection:** The TUI uses a native file picker for setup paths, including the automated setup path flow. Direct shell use still falls back to `fzf` when available, or Bash/readline filesystem completion. Quoted or shell-escaped pasted paths are normalized. Selecting a sequencing file imports its containing folder so paired reads and related files are found together.
-- **Setup checklist:** `Setup -> Setup checklist` is read-only. It shows completed and missing setup items, with the next action to run for each missing requirement.
+- **Setup readiness:** `Start Here -> Check what is ready` is read-only. It shows completed and missing setup items, with the next action to run for each missing requirement.
 - **Samples:** Setup can scan paired FASTQ/FASTQ.gz, existing BAM/CRAM, existing VCF, or user-provided assembly files, including mixed folders. It writes row-id based native Open Genome samplesheets.
-- **Reference/workflow:** Genome Workflow actions fetch the public GATK GRCh38 bundle, index it locally, prepare the native Open Genome Nextflow pipeline, and run/resume it through the `opengenome` conda environment.
-- **Reports:** The native workflow stages exact process outputs into the report compiler, then emits per-row HTML/TSV/JSON evidence with explicit limitations and PGx/annotation status. The base env includes lightweight `gfastats`; heavier report tools such as QUAST, VEP, and full PharmCAT installation are treated as optional/on-demand.
-- **Environment:** `Setup -> Install / update Open Genome tools` is the single user-facing install action. It installs the main `opengenome` environment plus a small IGV environment because current GATK packages require Java 17 while current IGV requires Java 21.
+- **Sample dataset:** `Start Here -> Try sample data` wires the local public GIAB/NIST HG002 benchmark VCF into the manifest for UX testing without using private data.
+- **Reference/workflow:** `Start Here` owns setup and readiness. `Run Analysis -> Run local genome analysis` prepares if needed, then runs or resumes the local Nextflow workflow through the `opengenome` conda environment. Manual reference and command steps live under advanced folders.
+- **Reports:** The native workflow emits `report_index.html` plus compatibility `open_genome_report.html`, TSV findings, JSON evidence, and a run manifest. The report links FastQC/fastp/MultiQC files, shows mosdepth coverage charts, summarizes VEP `CSQ` or SnpEff `ANN` consequence fields when present, lists local ClinVar/dbSNP/gnomAD evidence, and keeps PharmCAT PGx status in its own section. Use `Start Here -> Load existing results` when results already exist on disk, then `Results -> Open my report` or `Results -> Explain my results` without rerunning.
+- **Optional public evidence:** ClinVar, dbSNP, gnomAD, VEP/SnpEff, and PharmCAT are local-cache driven. Open Genome does not upload variants for annotation, and skipped report sections mean the matching local resource or VCF annotation field was not configured.
+- **Environment:** `Start Here -> Advanced manual setup -> Install or update local tools` installs the main `opengenome` environment plus a small IGV environment because current GATK packages require Java 17 while current IGV requires Java 21.
 
 ## Safety Boundaries
 
@@ -95,7 +97,7 @@ size_bypass = false
 
 ## Upstream
 
-Open Genome keeps the upstream TUI interaction model while replacing the command surface with local genomics workflows. The binary is still named `linutil` for compatibility with the inherited package layout.
+Open Genome keeps the upstream TUI interaction model while replacing the command surface with local genomics workflows.
 
 ## Docs
 

@@ -11,6 +11,10 @@ python3 core/tabs/open-genome/lib/setup_status_test.py
 
 echo "== Shell helper tests =="
 bash core/tabs/setup/scripts/open_genome_lib_test.sh
+bash core/tabs/setup/scripts/set_results_path_test.sh
+bash core/tabs/genome-workflow/scripts/run_open_genome_test.sh
+bash core/tabs/visualization/scripts/results_summary_test.sh
+bash core/tabs/visualization/scripts/open_report_viewer_test.sh
 
 echo "== Shell syntax =="
 while IFS= read -r script; do
@@ -18,7 +22,7 @@ while IFS= read -r script; do
 done < <(find core/tabs -type f -name '*.sh' | sort)
 
 echo "== Rust tab metadata test =="
-cargo test --package linutil_core embedded_open_genome_tabs_parse_and_resolve_scripts
+cargo test --package opengenome_core embedded_open_genome_tabs_parse_and_resolve_scripts
 
 nextflow_cmd=()
 if command -v nextflow >/dev/null 2>&1; then
@@ -35,7 +39,7 @@ if test "${#nextflow_cmd[@]}" -gt 0; then
 	printf 'sample,row_id,lane,input_type,fastq_1,fastq_2,bam,cram,vcf,assembly,sex,status\n' >"$tmp/samples.csv"
 	printf 'toy,toy_vcf,lane_1,vcf,,,,,%s,,NA,0\n' "$tmp/toy.vcf.gz" >>"$tmp/samples.csv"
 	printf '##fileformat=VCFv4.2\n#CHROM\tPOS\tID\tREF\tALT\tQUAL\tFILTER\tINFO\n' | gzip -c >"$tmp/toy.vcf.gz"
-	NXF_SYNTAX_PARSER="${NXF_SYNTAX_PARSER:-v1}" "${nextflow_cmd[@]}" run core/tabs/open-genome/pipelines/open-genome \
+	NXF_HOME="$tmp/.nextflow" NXF_SYNTAX_PARSER="${NXF_SYNTAX_PARSER:-v1}" "${nextflow_cmd[@]}" -log "$tmp/nextflow.log" run core/tabs/open-genome/pipelines/open-genome \
 		-profile stub \
 		-stub-run \
 		--samplesheet "$tmp/samples.csv" \

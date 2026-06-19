@@ -120,7 +120,31 @@ process ALIGNMENT_QC {
     """
     printf '0 + 0 in total\\n' > "${row_id}.samtools.flagstat.txt"
     printf 'SN\\tnumber of records:\\t0\\n' > "${row_id}.samtools.stats.txt"
-    printf 'chrom\\tlength\\tbases\\tmean\\tmin\\tmax\\n' > "${row_id}.mosdepth.summary.txt"
+    printf 'chrom\\tlength\\tbases\\tmean\\tmin\\tmax\\nchr1\\t12\\t360\\t30\\t0\\t45\\ntotal\\t12\\t360\\t30\\t0\\t45\\n' > "${row_id}.mosdepth.summary.txt"
+    """
+}
+
+process MULTIQC_REPORT {
+    publishDir "${params.outdir}/qc", mode: 'copy'
+
+    input:
+    path qc_inputs
+
+    output:
+    path "multiqc_report.html", emit: report_html
+
+    script:
+    """
+    if multiqc . -o . -n multiqc_report.html --force; then
+      :
+    else
+      printf '<!doctype html><html><body><h1>MultiQC unavailable</h1><p>Open Genome could not build a MultiQC report from the staged QC files.</p></body></html>\\n' > multiqc_report.html
+    fi
+    """
+
+    stub:
+    """
+    printf '<!doctype html><html><body><h1>MultiQC stub report</h1></body></html>\\n' > multiqc_report.html
     """
 }
 
@@ -171,8 +195,7 @@ process NORMALIZE_VCF {
     tuple val(sample), val(row_id), path(vcf)
 
     output:
-    tuple val(sample), val(row_id), path("${row_id}.normalized.vcf.gz"), emit: normalized_vcf
-    path "${row_id}.normalized.vcf.gz.tbi", emit: normalized_tbi
+    tuple val(sample), val(row_id), path("${row_id}.normalized.vcf.gz"), path("${row_id}.normalized.vcf.gz.tbi"), emit: normalized_vcf
     path "${row_id}.bcftools.stats.txt", emit: bcftools_stats
 
     script:
@@ -195,17 +218,19 @@ process ANNOTATE_VCF {
     publishDir "${params.outdir}/annotations", mode: 'copy'
 
     input:
-    tuple val(sample), val(row_id), path(vcf)
+    tuple val(sample), val(row_id), path(vcf), path(vcf_tbi)
 
     output:
     tuple val(sample), val(row_id), path("${row_id}.annotated.vcf.gz"), emit: annotated_vcf
     path "${row_id}.clinvar.matches.tsv", emit: clinvar_tsv
     path "${row_id}.variant_summary.tsv", emit: variant_tsv
+    path "${row_id}.public_annotations.tsv", emit: public_annotations
     path "${row_id}.annotation_status.tsv", emit: annotation_status
 
     script:
     def dbsnp = optionalPath(params.dbsnp)
     def clinvar = optionalPath(params.clinvar)
+    def gnomad = optionalPath(params.gnomad)
     """
     printf 'row_id\\tsample\\tstep\\tstate\\tmessage\\n' > "${row_id}.annotation_status.tsv"
     cp "$vcf" "${row_id}.annotated.vcf.gz"
@@ -229,6 +254,67 @@ process ANNOTATE_VCF {
       printf 'chrom\\tpos\\tid\\tref\\talt\\tgt\\n' > "${row_id}.clinvar.matches.tsv"
       printf '%s\\t%s\\tclinvar\\tskipped\\tClinVar disabled or not configured\\n' "${row_id}" "${sample}" >> "${row_id}.annotation_status.tsv"
     fi
+    if [[ "${gnomad}" != "" && -f "${gnomad}" ]]; then
+      bcftools isec -n=2 -w1 "$vcf" "${gnomad}" -Oz -p gnomad_isec
+      printf '%s\\t%s\\tgnomad\\tcomplete\\t%s\\n' "${row_id}" "${sample}" "${gnomad}" >> "${row_id}.annotation_status.tsv"
+    else
+      printf '%s\\t%s\\tgnomad\\tskipped\\tgnomAD VCF not configured\\n' "${row_id}" "${sample}" >> "${row_id}.annotation_status.tsv"
+    fi
+    python3 - "${row_id}" "${sample}" "${row_id}.annotated.vcf.gz" "clinvar_isec/0000.vcf.gz" "gnomad_isec/0000.vcf.gz" "${row_id}.public_annotations.tsv" <<'PY'
+import gzip
+import sys
+from pathlib import Path
+
+row_id, sample, annotated, clinvar, gnomad, out_path = sys.argv[1:]
+
+def open_text(path):
+    p = Path(path)
+    if not p.is_file():
+        return None
+    return gzip.open(p, "rt", encoding="utf-8", errors="replace") if p.suffix == ".gz" else p.open("r", encoding="utf-8", errors="replace")
+
+def info_map(raw):
+    out = {}
+    for item in raw.split(";"):
+        if not item:
+            continue
+        if "=" in item:
+            key, value = item.split("=", 1)
+        else:
+            key, value = item, "present"
+        out[key] = value
+    return out
+
+def iter_variants(path):
+    fh = open_text(path)
+    if fh is None:
+        return
+    with fh:
+        for line in fh:
+            if not line or line.startswith("#"):
+                continue
+            fields = line.rstrip("\\n").split("\\t")
+            if len(fields) < 8:
+                continue
+            chrom, pos, vid, ref, alt = fields[:5]
+            yield chrom, pos, vid, ref, alt, info_map(fields[7])
+
+def write_row(fh, chrom, pos, vid, ref, alt, source, label, value, note):
+    fh.write("\\t".join([row_id, sample, chrom, pos, vid, ref, alt, source, label, value, note]) + "\\n")
+
+with open(out_path, "w", encoding="utf-8") as out:
+    out.write("row_id\\tsample\\tchrom\\tpos\\tid\\tref\\talt\\tsource\\tlabel\\tvalue\\tnote\\n")
+    for chrom, pos, vid, ref, alt, info in iter_variants(annotated) or []:
+        if vid and vid != ".":
+            write_row(out, chrom, pos, vid, ref, alt, "dbSNP", "variant ID", vid, "Known public ID on annotated VCF")
+        for key in ("AF", "AF_popmax", "gnomAD_AF", "gnomADg_AF", "gnomADe_AF"):
+            if key in info:
+                write_row(out, chrom, pos, vid, ref, alt, "gnomAD", key, info[key], "Allele-frequency field present on VCF record")
+    for chrom, pos, vid, ref, alt, info in iter_variants(clinvar) or []:
+        write_row(out, chrom, pos, vid, ref, alt, "ClinVar", "overlap", "present", "Variant overlaps configured local ClinVar VCF")
+    for chrom, pos, vid, ref, alt, info in iter_variants(gnomad) or []:
+        write_row(out, chrom, pos, vid, ref, alt, "gnomAD", "overlap", "present", "Variant overlaps configured local gnomAD VCF")
+PY
     """
 
     stub:
@@ -236,7 +322,109 @@ process ANNOTATE_VCF {
     cp "$vcf" "${row_id}.annotated.vcf.gz" || touch "${row_id}.annotated.vcf.gz"
     printf 'chrom\\tpos\\tid\\tref\\talt\\tgt\\n' > "${row_id}.variant_summary.tsv"
     printf 'chrom\\tpos\\tid\\tref\\talt\\tgt\\n' > "${row_id}.clinvar.matches.tsv"
+    printf 'row_id\\tsample\\tchrom\\tpos\\tid\\tref\\talt\\tsource\\tlabel\\tvalue\\tnote\\n' > "${row_id}.public_annotations.tsv"
     printf 'row_id\\tsample\\tstep\\tstate\\tmessage\\n%s\\t%s\\tstub\\tcomplete\\tstub\\n' "${row_id}" "${sample}" > "${row_id}.annotation_status.tsv"
+    """
+}
+
+process CONSEQUENCE_SUMMARY {
+    tag { row_id }
+    publishDir "${params.outdir}/annotations", mode: 'copy'
+
+    input:
+    tuple val(sample), val(row_id), path(vcf)
+
+    output:
+    path "${row_id}.consequence_summary.tsv", emit: consequence_tsv
+    path "${row_id}.consequence_status.tsv", emit: consequence_status
+
+    script:
+    def vepCache = optionalPath(params.vep_cache)
+    def snpEffDb = optionalPath(params.snpeff_db)
+    """
+    python3 - "${row_id}" "${sample}" "$vcf" "${row_id}.consequence_summary.tsv" "${row_id}.consequence_status.tsv" "${vepCache}" "${snpEffDb}" <<'PY'
+import gzip
+import re
+import sys
+from collections import Counter
+from pathlib import Path
+
+row_id, sample, vcf, out_table, out_status, vep_cache, snpeff_db = sys.argv[1:]
+
+def open_text(path):
+    p = Path(path)
+    return gzip.open(p, "rt", encoding="utf-8", errors="replace") if p.suffix == ".gz" else p.open("r", encoding="utf-8", errors="replace")
+
+def info_map(raw):
+    out = {}
+    for item in raw.split(";"):
+        if not item:
+            continue
+        if "=" in item:
+            key, value = item.split("=", 1)
+        else:
+            key, value = item, "present"
+        out[key] = value
+    return out
+
+csq_fields = []
+counts = Counter()
+state = "skipped"
+message = "No VEP CSQ or SnpEff ANN consequence field found; configure a local annotation step to populate this section"
+with open_text(vcf) as fh:
+    for line in fh:
+        if line.startswith("##INFO=<ID=CSQ"):
+            match = re.search(r"Format: ([^\\\"]+)", line)
+            if match:
+                csq_fields = [part.strip() for part in match.group(1).split("|")]
+        if line.startswith("#"):
+            continue
+        fields = line.rstrip("\\n").split("\\t")
+        if len(fields) < 8:
+            continue
+        info = info_map(fields[7])
+        if "ANN" in info:
+            state = "parsed"
+            message = "Parsed SnpEff ANN fields already present in VCF"
+            for ann in info["ANN"].split(","):
+                parts = ann.split("|")
+                consequence = parts[1] if len(parts) > 1 and parts[1] else "unknown"
+                impact = parts[2] if len(parts) > 2 and parts[2] else "unknown"
+                gene = parts[3] if len(parts) > 3 and parts[3] else ""
+                counts[("SnpEff ANN", consequence, gene, impact, "ANN field present in VCF")] += 1
+        if "CSQ" in info:
+            state = "parsed"
+            message = "Parsed VEP CSQ fields already present in VCF"
+            for csq in info["CSQ"].split(","):
+                parts = csq.split("|")
+                mapped = dict(zip(csq_fields, parts)) if csq_fields else {}
+                consequence = mapped.get("Consequence") or (parts[1] if len(parts) > 1 else "unknown")
+                impact = mapped.get("IMPACT") or mapped.get("Impact") or "unknown"
+                gene = mapped.get("SYMBOL") or mapped.get("Gene") or ""
+                counts[("VEP CSQ", consequence, gene, impact, "CSQ field present in VCF")] += 1
+
+if not counts and (vep_cache or snpeff_db):
+    state = "configured_no_fields"
+    message = "VEP/SnpEff configuration was present, but this VCF did not contain CSQ or ANN consequence fields"
+
+with open(out_table, "w", encoding="utf-8") as out:
+    out.write("row_id\\tsample\\ttool\\tstate\\tconsequence\\tgene\\timpact\\tcount\\tnote\\n")
+    if counts:
+        for (tool, consequence, gene, impact, note), count in sorted(counts.items()):
+            out.write("\\t".join([row_id, sample, tool, state, consequence, gene, impact, str(count), note]) + "\\n")
+    else:
+        out.write("\\t".join([row_id, sample, "VEP/SnpEff", state, "not_assessed", "", "", "0", message]) + "\\n")
+
+with open(out_status, "w", encoding="utf-8") as out:
+    out.write("row_id\\tsample\\tstep\\tstate\\tmessage\\n")
+    out.write("\\t".join([row_id, sample, "consequence", state, message]) + "\\n")
+PY
+    """
+
+    stub:
+    """
+    printf 'row_id\\tsample\\ttool\\tstate\\tconsequence\\tgene\\timpact\\tcount\\tnote\\n%s\\t%s\\tVEP/SnpEff\\tstub\\tnot_assessed\\t\\t\\t0\\tstub\\n' "${row_id}" "${sample}" > "${row_id}.consequence_summary.tsv"
+    printf 'row_id\\tsample\\tstep\\tstate\\tmessage\\n%s\\t%s\\tconsequence\\tstub\\tstub\\n' "${row_id}" "${sample}" > "${row_id}.consequence_status.tsv"
     """
 }
 
@@ -245,7 +433,7 @@ process PHARMCAT {
     publishDir "${params.outdir}/annotations/pharmcat", mode: 'copy'
 
     input:
-    tuple val(sample), val(row_id), path(vcf)
+    tuple val(sample), val(row_id), path(vcf), path(vcf_tbi)
 
     output:
     path "${row_id}.pharmcat_status.tsv", emit: status
@@ -305,6 +493,7 @@ process COMPILE_REPORT {
     path report_inputs
 
     output:
+    path "report_index.html", emit: report_index
     path "open_genome_report.html", emit: report_html
     path "findings.tsv", emit: findings_tsv
     path "evidence.json", emit: evidence_json
@@ -313,6 +502,9 @@ process COMPILE_REPORT {
     script:
     def clinvar = optionalPath(params.clinvar)
     def dbsnp = optionalPath(params.dbsnp)
+    def gnomad = optionalPath(params.gnomad)
+    def vepCache = optionalPath(params.vep_cache)
+    def snpEffDb = optionalPath(params.snpeff_db)
     def pharmcatJar = optionalPath(params.pharmcat_jar)
     """
     python3 "${params.report_compiler}" \\
@@ -322,11 +514,15 @@ process COMPILE_REPORT {
       --reference "${params.fasta}" \\
       --clinvar "${clinvar}" \\
       --dbsnp "${dbsnp}" \\
+      --gnomad "${gnomad}" \\
+      --vep-cache "${vepCache}" \\
+      --snpeff-db "${snpEffDb}" \\
       --pharmcat-jar "${pharmcatJar}"
     """
 
     stub:
     """
+    printf '<html><body>Open Genome stub report</body></html>\\n' > report_index.html
     printf '<html><body>Open Genome stub report</body></html>\\n' > open_genome_report.html
     printf 'sample\\tfinding\\tsource\\n' > findings.tsv
     printf '{}\\n' > evidence.json
@@ -380,20 +576,35 @@ workflow {
     ALIGNMENT_QC(alignment_for_qc_ch)
     GATK_GERMLINE(ALIGNMENT_QC.out.alignment_passthrough)
 
+    qc_report_inputs_ch = READ_QC.out.fastp_json
+        .mix(READ_QC.out.fastp_html)
+        .mix(READ_QC.out.fastqc_html)
+        .mix(ALIGNMENT_QC.out.flagstat)
+        .mix(ALIGNMENT_QC.out.samtools_stats)
+        .mix(ALIGNMENT_QC.out.mosdepth_summary)
+        .collect()
+    MULTIQC_REPORT(qc_report_inputs_ch)
+
     vcf_for_norm_ch = GATK_GERMLINE.out.raw_vcf.mix(vcf_input_ch)
     NORMALIZE_VCF(vcf_for_norm_ch)
     ANNOTATE_VCF(NORMALIZE_VCF.out.normalized_vcf)
+    CONSEQUENCE_SUMMARY(ANNOTATE_VCF.out.annotated_vcf)
     PHARMCAT(NORMALIZE_VCF.out.normalized_vcf)
     ASSEMBLY_QC(assembly_input_ch)
 
     report_inputs_ch = READ_QC.out.fastp_json
+        .mix(READ_QC.out.fastp_html)
         .mix(READ_QC.out.fastqc_html)
+        .mix(MULTIQC_REPORT.out.report_html)
         .mix(ALIGNMENT_QC.out.flagstat)
         .mix(ALIGNMENT_QC.out.samtools_stats)
         .mix(ALIGNMENT_QC.out.mosdepth_summary)
         .mix(NORMALIZE_VCF.out.bcftools_stats)
         .mix(ANNOTATE_VCF.out.variant_tsv)
         .mix(ANNOTATE_VCF.out.clinvar_tsv)
+        .mix(ANNOTATE_VCF.out.public_annotations)
+        .mix(CONSEQUENCE_SUMMARY.out.consequence_tsv)
+        .mix(CONSEQUENCE_SUMMARY.out.consequence_status)
         .mix(ANNOTATE_VCF.out.annotation_status)
         .mix(PHARMCAT.out.status)
         .mix(ASSEMBLY_QC.out.gfastats)

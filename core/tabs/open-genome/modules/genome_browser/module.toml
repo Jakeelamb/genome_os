@@ -1,3 +1,3 @@
 id = "genome_browser"
 display_name = "Genome browser (IGV)"
-description = "IGV desktop for visualization (conda-forge)."
+description = "IGV desktop viewer. Kept separate because current GATK requires Java 17 and current IGV requires Java 21."

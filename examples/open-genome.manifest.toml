@@ -53,7 +53,7 @@ summary_file = "/data/work/open-genome/results/open-genome-summary.txt"
 multiqc_dir = "/data/work/open-genome/open-genome-results/qc/multiqc"
 variant_stats_file = "/data/work/open-genome/results/sample42.vcf.gz.bcftools-stats.txt"
 report_dir = "/data/work/open-genome/open-genome-results/report"
-report_html = "/data/work/open-genome/open-genome-results/report/open_genome_report.html"
+report_html = "/data/work/open-genome/open-genome-results/report/report_index.html"
 findings_tsv = "/data/work/open-genome/open-genome-results/report/findings.tsv"
 evidence_json = "/data/work/open-genome/open-genome-results/report/evidence.json"
 
@@ -64,32 +64,17 @@ clinvar_vcf = "/data/work/open-genome/cache/clinvar/clinvar.GRCh38.vcf.gz"
 clinvar_tbi = "/data/work/open-genome/cache/clinvar/clinvar.GRCh38.vcf.gz.tbi"
 dbsnp_vcf = "/data/refs/gatk_grch38/dbsnp_146.hg38.vcf.gz"
 dbsnp_tbi = "/data/refs/gatk_grch38/dbsnp_146.hg38.vcf.gz.tbi"
+gnomad_vcf = ""
+gnomad_tbi = ""
+vep_cache = ""
+snpeff_db = ""
+snpeff_config = ""
 pharmcat_jar = ""
 
 [[modules]]
-id = "sratoolkit"
-enabled = true
-
-[[modules]]
-id = "ncbi_datasets"
-enabled = true
-
-[[modules]]
-id = "genomic_tools"
+id = "opengenome"
 enabled = true
 
 [[modules]]
 id = "genome_browser"
-enabled = true
-
-[[modules]]
-id = "nextflow"
-enabled = true
-
-[[modules]]
-id = "gatk"
-enabled = true
-
-[[modules]]
-id = "qc"
 enabled = true

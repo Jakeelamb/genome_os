@@ -1,0 +1,33 @@
+name = "Run Analysis"
+
+[[data]]
+name = "Run local genome analysis"
+description = "Run or resume analysis on this computer. Your genome files are not uploaded."
+script = "scripts/run_open_genome.sh"
+task_list = "RUN"
+multi_select = false
+
+[[data]]
+name = "Advanced workflow steps"
+multi_select = false
+
+[[data.entries]]
+name = "Check reference files"
+description = "Check whether the configured reference genome and index files are ready."
+script = "scripts/reference_bundle_status.sh"
+task_list = "CHECK"
+multi_select = false
+
+[[data.entries]]
+name = "Prepare analysis command"
+description = "Create the local workflow command without running it yet."
+script = "scripts/prepare_open_genome_run.sh"
+task_list = "ADV"
+multi_select = false
+
+[[data.entries]]
+name = "Index reference genome"
+description = "Build reference indexes needed for alignment. Usually only needed once."
+script = "scripts/index_grch38_reference.sh"
+task_list = "ADV"
+multi_select = false

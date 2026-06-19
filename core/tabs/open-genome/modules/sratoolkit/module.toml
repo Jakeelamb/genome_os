@@ -1,3 +1,0 @@
-id = "sratoolkit"
-display_name = "SRA toolkit"
-description = "NCBI SRA Tools (fasterq-dump, prefetch) via bioconda."

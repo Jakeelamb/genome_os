@@ -20,6 +20,5 @@ input_dir=$(open_genome_dataset_root "$selected") || {
 	exit 1
 }
 out="$workdir/samples/open_genome_samplesheet.csv"
-sarek_out="$workdir/samples/sarek_samplesheet.csv"
-python3 "$OPEN_GENOME_BUNDLE/lib/sample_scan.py" "$input_dir" --out "$out" --sarek-out "$sarek_out"
+python3 "$OPEN_GENOME_BUNDLE/lib/sample_scan.py" "$input_dir" --out "$out"
 python3 "$OPEN_GENOME_MANIFEST_CLI" show

@@ -20,11 +20,17 @@ if test -f "$USER_MANIFEST"; then
 	exe_override=$(python3 "$MANIFEST_CLI" get conda.conda_exe 2>/dev/null || true)
 fi
 
-if test -n "${exe_override:-}"; then
+if test -n "${exe_override:-}" && test -x "$exe_override"; then
 	export OG_CONDA_EXE="$exe_override"
 elif command -v conda >/dev/null 2>&1; then
+	if test -n "${exe_override:-}"; then
+		echo "Configured conda is not executable, falling back to PATH: $exe_override" >&2
+	fi
 	export OG_CONDA_EXE="conda"
 elif command -v mamba >/dev/null 2>&1; then
+	if test -n "${exe_override:-}"; then
+		echo "Configured conda is not executable, falling back to PATH: $exe_override" >&2
+	fi
 	export OG_CONDA_EXE="mamba"
 else
 	echo "Neither conda nor mamba found on PATH (set conda.conda_exe in $USER_MANIFEST)." >&2

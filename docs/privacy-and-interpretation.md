@@ -4,11 +4,13 @@ Open Genome is designed for local analysis. Sequencing reads, alignments, varian
 
 ## What May Be Downloaded
 
-Open Genome can download public software packages, reference resources, annotation databases, and workflow code, including conda packages, GRCh38 reference files, ClinVar/dbSNP resources, and Nextflow pipeline dependencies.
+Open Genome can download public software packages, reference resources, annotation databases, and workflow code, including conda packages, GRCh38 reference files, ClinVar/dbSNP resources, and Nextflow pipeline dependencies. Optional report enrichments such as gnomAD VCFs, VEP/SnpEff caches, and PharmCAT are treated as local resources.
 
 ## What Is Not Uploaded
 
 Open Genome does not upload user genome data, variant calls, sample metadata, or reports as part of the bundled setup, pipeline, or reporting scripts.
+
+Skipped ClinVar, dbSNP, gnomAD, VEP/SnpEff, or PharmCAT sections mean a local resource or annotation field was not configured. Open Genome does not send variants to hosted annotation APIs to fill those sections.
 
 ## Interpretation Limits
 

@@ -1,35 +1,29 @@
-name = "Visualization"
+name = "Results"
 
 [[data]]
-name = "Local result summary"
+name = "Open my report"
+description = "Open the human-readable HTML report from the latest local results."
+script = "scripts/open_report_viewer.sh"
+task_list = "VIEW"
 multi_select = false
 
-[[data.entries]]
-name = "Summarize local workflow outputs"
-description = "Lists local Open Genome or Sarek reports, BAM/CRAM files, VCFs, and bcftools stats when available."
+[[data]]
+name = "Explain my results"
+description = "Show a plain-language summary of what was produced, where it is stored, and what to do next."
 script = "scripts/results_summary.sh"
-task_list = "DATA"
-
-[[data]]
-name = "Genome browser"
+task_list = "VIEW"
 multi_select = false
 
-[[data.entries]]
-name = "Launch IGV"
-description = "Launches IGV from the local opengenome environment for manual BAM/VCF inspection."
+[[data]]
+name = "Understand report limits"
+description = "Explain what Open Genome results can and cannot tell you."
+script = "../reports/scripts/report_boundaries.sh"
+task_list = "INFO"
+multi_select = false
+
+[[data]]
+name = "Advanced: open files in IGV"
+description = "Open raw BAM/CRAM/VCF files in IGV for expert inspection."
 script = "scripts/launch_igv.sh"
-task_list = "DATA"
-
-[[data]]
-name = "Export"
+task_list = "ADV"
 multi_select = false
-
-[[data.entries]]
-name = "Preview VCF / table"
-command = "echo \"Use Visualization -> Summarize local workflow outputs for VCF paths and bcftools stats.\""
-task_list = "DATA"
-
-[[data.entries]]
-name = "Export for downstream"
-command = "echo \"Open Genome keeps outputs local under the configured output directory.\""
-task_list = "DATA"

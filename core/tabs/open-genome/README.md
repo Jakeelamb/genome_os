@@ -8,8 +8,8 @@ This directory is embedded next to the tab trees and extracted at runtime with t
 |------|------|
 | `manifest.default.toml` | Shipped defaults for local paths, privacy, sample import, GRCh38 resources, native workflow state, cache paths, results, and module toggles. Copied to `~/.config/open-genome/manifest.toml` on first use. |
 | `lib/manifest_cli.py` | Read/write manifest (Python 3.11+ `tomllib`). |
-| `lib/sample_scan.py` | Scan a local sequencing folder and emit Open Genome plus optional Sarek-compatible samplesheets. |
-| `lib/report_compiler.py` | Compile pipeline outputs into static HTML/TSV/JSON evidence artifacts. |
+| `lib/sample_scan.py` | Scan a local sequencing folder and emit Open Genome samplesheets. |
+| `lib/report_compiler.py` | Compile pipeline outputs into `report_index.html`, compatibility HTML, TSV findings, and JSON evidence artifacts. |
 | `pipelines/open-genome/` | Native Nextflow DSL2 pipeline for FASTQ, BAM/CRAM, VCF, and assembly-stat inputs. |
 | `lib/conda_resolve.sh` | Pick `conda` from manifest + PATH, with explicit override support. |
 | `lib/conda_install_module.sh` | `conda env create` / `env update` from a module `environment.yml`, with optional explicit-lock support when a maintained lock file exists. |
@@ -19,25 +19,24 @@ This directory is embedded next to the tab trees and extracted at runtime with t
 
 ## V1 local WGS flow
 
-1. Setup -> Install private Miniforge/Conda.
-2. Setup -> Install / update: Open Genome env.
-3. Setup -> Import sequencing files. Choose or paste a sequencing file/folder. This writes local row-id based Open Genome and Sarek-compatible CSVs and records only local file paths.
-4. Setup -> Setup checklist to see what is ready and what still needs to be configured.
-5. Resources -> Set up local annotation cache, then Assembly -> Fetch/index configured GRCh38 reference.
-6. Assembly -> Prepare Open Genome native run, then Run / resume Open Genome native workflow.
-7. Visualization -> Summarize local workflow outputs, optionally launch IGV from the separate genome browser env.
-8. Reports -> Review the report sources and interpretation boundaries.
+1. Start Here -> Start guided setup.
+2. Start Here -> Check what is ready to see what is configured and what still needs attention.
+3. Start Here -> Try sample data if you want to test the flow without using private genome files.
+4. Run Analysis -> Run local genome analysis. It prepares the command file automatically if needed.
+5. Results -> Open my report or Results -> Explain my results.
+6. Results -> Understand report limits before interpreting findings.
 
-Open Genome may download public tools, nf-core/sarek, and reference resources, but user reads, BAM/CRAM, VCF, logs, and metadata stay local.
+Open Genome may download public tools and reference resources, but user reads, BAM/CRAM, VCF, logs, and metadata stay local.
+
+The native report links FastQC/fastp/MultiQC files, summarizes mosdepth coverage, renders a chromosome coverage chart, reads VEP `CSQ` or SnpEff `ANN` consequence fields when present, lists local ClinVar/dbSNP/gnomAD evidence, and separates PharmCAT PGx status from disease-variant evidence. gnomAD, VEP/SnpEff, and PharmCAT are optional local-cache inputs; if they are not configured, the report marks those sections as skipped instead of calling an external service.
 
 Run `scripts/check-genomics.sh` from the repo root to verify Python scanner/report tests, shell syntax, Rust tab metadata, and the native Nextflow stub graph.
 
-## Adding a module
+## Adding tools
 
-1. Create `modules/<id>/` with `module.toml` + `environment.yml` (`name: og-<something>` unique).
-2. Append `[[modules]]` with `id = "<id>"` and `enabled = true` in `manifest.default.toml` (and in your user manifest if you already copied it).
-3. Add a thin wrapper in `../setup/scripts/conda_install_<id>.sh` that exports `OPEN_GENOME_BUNDLE` and runs `lib/conda_install_module.sh <id>`.
-4. Wire the wrapper from `../setup/tab_data.toml`.
+1. Prefer adding packages to `modules/opengenome/environment.yml`.
+2. Keep the user-facing Start Here tab focused on the guided path; move manual tool actions behind Advanced manual setup.
+3. Create a separate `modules/<id>/` environment only when dependency conflicts make that unavoidable, as with IGV's Java 21 requirement.
 
 ## User overrides
 

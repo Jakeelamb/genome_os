@@ -1,7 +1,0 @@
-name: og-nextflow
-channels:
-  - conda-forge
-dependencies:
-  - nextflow>=24.04.0
-  - openjdk>=17.0.0,<22
-  - ca-certificates

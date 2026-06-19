@@ -14,9 +14,11 @@ Run the same checks used before release:
 
 ```bash
 cargo fmt --check
-cargo check -p linutil_tui --all-features
+cargo check -p opengenome_tui --all-features
 cargo test
 scripts/check-genomics.sh
 ```
 
 `scripts/check-genomics.sh` covers Python scanner/report tests, shell syntax, Rust tab metadata, and a native Nextflow stub smoke test when Nextflow is available.
+
+The guided setup explains each step before changing anything. The Start Here tab keeps the default path small and moves manual conda/reference controls behind Advanced manual setup.
