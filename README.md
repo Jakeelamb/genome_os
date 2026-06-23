@@ -28,7 +28,7 @@ cargo run -p opengenome_tui
 cargo run -p opengenome_tui
 ```
 
-The TUI uses a built-in animated DNA logo by default and does not require a sibling checkout or private path dependency. Set `OPEN_GENOME_USE_PNG_LOGO=1` to use the bundled PNG fallback. The Nix package builds the same way: `nix build .#default`.
+The TUI uses a built-in animated DNA logo and does not require a sibling checkout, image asset, or private path dependency. The Nix package builds the same way: `nix build .#default`.
 
 Release binary (workspace default):
 
