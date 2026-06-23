@@ -1,8 +1,8 @@
 # Open Genome
 
-Terminal utility for local genomics workflows: left pane workflow areas, right pane actions, keyboard-first navigation.
+Terminal utility for local genomic assembly and variant analysis:
 
-Open Genome helps privacy-minded users set up local genomics tooling, import sequencing files, prepare references, run native Nextflow workflows, assemble long-read genomes de novo, and generate evidence reports without uploading genome data.
+Open Genome helps users set up local genomics tooling, import sequencing files, prepare references, run native assembly and variant calling workflows, and generate evidence reports without uploading genome data.
 
 ![Open Genome terminal interface showing the welcome actions and setup checklist](https://raw.githubusercontent.com/Jakeelamb/opengenome/main/docs/assets/open-genome-tui.png)
 
@@ -27,8 +27,7 @@ cargo run -p opengenome_tui
 ```bash
 cargo run -p opengenome_tui
 ```
-
-The TUI uses a built-in animated DNA logo and does not require a sibling checkout, image asset, or private path dependency. The Nix package builds the same way: `nix build .#default`.
+ The Nix package builds the same way: `nix build .#default`.
 
 Release binary (workspace default):
 
@@ -50,9 +49,6 @@ Generate the bundled demo output bundle without launching the TUI:
 ```bash
 cargo run -p opengenome_tui -- --demo-output
 ```
-
-Use this in non-interactive terminals, CI logs, or command runners that cannot draw a terminal UI.
-It creates the same tiny local preview bundle as `Start Here -> Try sample data`: reference-germline and existing-VCF HTML reports, fastp JSON/HTML, FastQC HTML, MultiQC placeholders, read-density SVG plots, de novo assembly FASTA/GFA, circularity review TSV, assembly graph preview, gfastats metrics, `denovo_assembly_summary.tsv`, and `denovo_assembly_manifest.json`.
 
 Run the public human validation dataset without launching the TUI:
 
