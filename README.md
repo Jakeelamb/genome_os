@@ -1,5 +1,7 @@
 # Open Genome
 
+## Your Genome, Your Privacy!
+
 Terminal utility for local genomic assembly and variant analysis:
 
 Open Genome helps users set up local genomics tooling, import sequencing files, prepare references, run native assembly and variant calling workflows, and generate evidence reports without uploading genome data.
